@@ -13,11 +13,12 @@
 #include "config.h" //TODO: fix this
 #include <array> 
 #include <iostream>
+#include "cgra.h"
+#include "cgra_pe.h"
+
 #define LINE_SIZE 64
 
-//nikhil: why tid at the end?
-// DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
-// DERIVE_STRONGER_INT(CallbackIdx, int32_t, cbid)
+namespace cgra {
 
 class CGRACore {//: public Core {
 public:
@@ -28,11 +29,12 @@ public:
     // the different PE types and their placement in the fabric
     // during mapping.
 
-    //TODO: input config operations, routing
+    // TODO: routing
+    CGRACore(uint32_t numPes, uint32_t numOps);
+    ~CGRACore();
 
-    CGRACore(const std::string& configFile);
-
-
+    void loadBitstream(std::string bitstreamFilename);
+    void loadBitstream(Config& bitstream);
 
     // The CGRA model does timing and functional modeling, so this
     // simulate() does essentially nothing after a callback is
@@ -47,13 +49,12 @@ public:
 private:
 
     int numTiles;
-    int numPEs;
     int numInputs;
     int numOutputs;
     static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);
     typedef std::array<Word, NUM_VALUE_ELEMENTS> Value;
+    std::vector<Word> inputs;
     Word * inputs; //TODO: use Value (vector) here
-
 
     struct Operand {
         bool ready;
@@ -142,14 +143,12 @@ private:
         void decode();
         //TODO: use callbackindex here?
         void execute();
-    };
 
-    struct ProcessingElement {
-        int numOperations;
-        Operation *  operations;
+        StrongVec<PeIdx, ProcessingElement> processingElements;
     };
-    ProcessingElement * processingElements;
 };
+
+} // namespace cgra
 
 // }  // namespace sim
 // }  // namespace platy

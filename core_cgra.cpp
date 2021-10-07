@@ -18,73 +18,35 @@ CGRACore::Word multiply(CGRACore::Word lhs, CGRACore::Word rhs){
     return lhs * rhs;
 }
 
+CGRACore::CGRACore(uint32_t numPes, uint32_t numOps) {
+    for (PeIdx p = 0; p < (PeIdx)numPes; p++) {
+        processingElements.emplace_back(ProcessingElement{(OpIdx)numOps});
+    }
+}
 
-CGRACore::CGRACore(const std::string& configFile){
-        
-    
+void CGRACore::loadBitstream(std::stream bitstreamFilename) {
     Config conf(configFile.c_str());
 
-    numInputs = conf.get<uint32_t>("sys.inputs.count",2);
-    inputs = new Word[numInputs]; //TODO: use vector
-    for (int i=0; i<numInputs; i++){
-        inputs[i] = conf.get<Word>("sys.inputs.i_"+ std::to_string(i),0);        
-    }
+    loadBitstream(conf);
+}
 
-    numOutputs = 0; //TODO: change to a better termination condition
-    numPEs = conf.get<uint32_t>("sys.tiles", 1);
-    processingElements = new ProcessingElement[numPEs];
-    for (int i=0; i<numPEs; i++){
-        // std::string pePrefix = "sys.tile_"+std::to_string(i); TODO
-        // processingElements[i].init(conf,pePrefix); TODO
-        processingElements[i].numOperations = conf.get<uint32_t>("sys.tile_"+std::to_string(i)+".operations",1);
-
-        numOutputs += processingElements[i].numOperations;
-        processingElements[i].operations = new Operation[processingElements[i].numOperations];
-
-        for (int j=0; j<processingElements[i].numOperations; j++){
-            processingElements[i].operations[j].type = conf.get<const char*>("sys.tile_"+std::to_string(i)+".operation_"+std::to_string(j)+".type");;
-            
-            processingElements[i].operations[j].decode();
-
-            auto& ops=processingElements[i].operations[j].operands;
-            
-            //TODO: set and use predicate and fallback
-            ops.predicate.ready = true;
-            ops.fallback.ready = true;
-            
-            ops.lhs.scalar = true;
-            ops.lhs.tile = conf.get<int32_t>("sys.tile_"+std::to_string(i)+".operation_"+std::to_string(j)+".lhs.tile");
-            ops.lhs.op = conf.get<int32_t>("sys.tile_"+std::to_string(i)+".operation_"+std::to_string(j)+".lhs.op");
-            if(ops.lhs.tile < 0){
-                ops.lhs.ready = true;
-                ops.lhs.value[0] = inputs[ops.lhs.op];
-            }
-            else {
-                ops.lhs.ready = false; 
-            }
-
-            //TODO : ready to a timestamp
-            ops.rhs.scalar = true;
-            ops.rhs.tile = conf.get<int32_t>("sys.tile_"+std::to_string(i)+".operation_"+std::to_string(j)+".rhs.tile");
-            ops.rhs.op = conf.get<int32_t>("sys.tile_"+std::to_string(i)+".operation_"+std::to_string(j)+".rhs.op");
-            if(ops.rhs.tile < 0){
-                ops.rhs.ready = true;
-                ops.rhs.value[0] = inputs[ops.rhs.op];
-            }
-            else {
-                ops.rhs.ready = false; 
-            }
-            processingElements[i].operations[j].output.ready = false;
-
-
+void CGRACore::loadBitstream(Config& bitstream) {
+    // read inputs until there are none left
+    for (int i = 0; ; i++) {
+        try {
+            Word input = bitstream.get<Word>(qformat("sys.inputs_{}", i));
+            inputs.push_back(input);
+        } catch (...) {
+            break;
         }
     }
 
-    
-
+    numOutputs = 0; //TODO: change to a better termination condition
+    for (PeIdx p = 0; p < processingElements.size(); p++) {
+        processingElements[p].loadBitstream(bitstream, qformat("sys.pe_{}", p));
+    }
 }
-
-
+        
 //TODO : timing info for network, processing etc.
 void CGRACore::tick(){
 
