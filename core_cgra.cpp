@@ -7,7 +7,8 @@
 // namespace platy {
 // namespace sim {
 
-namespace cgra{ 
+namespace cgra {
+
 CGRACore::CGRACore(uint32_t numPes, uint32_t numOps) {
     networkDelay = 2;
     for (PeIdx p = 0; p < (PeIdx)numPes; p++) {
@@ -23,14 +24,12 @@ void CGRACore::loadBitstream(std::stream bitstreamFilename) {
 
 void CGRACore::loadBitstream(Config& bitstream) {
     // read inputs until there are none left
-    numInputs = bitstream.get<int32_t>("numInputs");
-    for (int i=0; ; i++){
+    for (int i = 0; ; i++){
         std::string s = qformat("pe_{}",i);
-        if (bitstream.exists(s)){
+        if (bitstream.exists(s)) {
             assert(i<processingElements.size());
             processingElements[i].loadBitstream(bitstream,s);
-        }
-        else{
+        } else {
             break;
         }
     }
@@ -114,37 +113,55 @@ void CGRACore::loadInputs(Config& inputConfig){
 
 // }
 
+// TODO: Re-write to call tick().
+void CGRACore::tick() {
+    while(!pq.empty() && pq.top().timestamp <= events::now()) {
+        TimeSpace x = pq.top();
+        pq.pop();
+
+        // TODO: All of this should be in ProcessingElement::execute
+        Operation &op = processingElements[x.pe].operation[x.op];
+        op.execute();
+        if (op.output.ready) {
+            for (int i = 0; i < op.dest.size(); op++) {
+                // shouldn't the dest just be a Operand* ???
+                auto &dest = op.dest[i];
+                
+                if (dest.pos) {
+                    processingElements[dest.pe].operation[dest.op].operands.rhs.set(op.output.value);
+                } else {
+                    processingElements[dest.pe].operation[dest.op].operands.lhs.set(op.output.value);
+                }
+                
+                if (dest.operands.ready()) {
+                    // TODO: Too much stuff happening in one line.
+                    pq.push(TimeSpace(x.timestamp+op.executionDelay+networkDelay,dest.pe,dest.op));
+                }
+            }
+        }
+        
+    }
+}
+
 void CGRACore::execute(){
     std::priority_queue<TimeSpace> pq; 
 
     //initial check for what's ready
     for (PeIdx p = 0; p < processingElements.size(); p++) {
-        for (OpIdx o = 0; o<processingElements[p].size(); p++){
-            if processingElements[p].operations[o].operands.ready()
-                pq.push(TimeSpace(0,p,o));
-        }
-    }
-
-    while(!pq.empty()){
-        TimeSpace x = pq.top();
-        pq.pop();
-        Operation &op = processingElements[x.pe].operation[x.op];
-        op.execute();
-        if (op.output.ready){
-            for (int i=0; i<op.dest.size(); op++){
-                auto &dest = op.dest[i];
-                if(dest.pos)
-                    processingElements[dest.pe].operation[dest.op].operands.rhs.set(op.output.value);
-                else
-                    processingElements[dest.pe].operation[dest.op].operands.lhs.set(op.output.value);
-                if(dest.operands.ready())
-                    pq.push(TimeSpace(x.timestamp+op.executionDelay+networkDelay,dest.pe,dest.op));
+        for (OpIdx o = 0; o < processingElements[p].size(); o++) {
+            if (processingElements[p].operations[o].operands.ready()) {
+                pq.push(TimeSpace{0,p,o});
             }
         }
-        
     }
 
+    while (!pq.empty()) {
+        now = pq.top().timestamp;
+        tick();
+    }
 }
+
 } //namespace cgra
+
 // }  // namespace sim
 // }  // namespace platy

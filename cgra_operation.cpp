@@ -2,6 +2,7 @@
 
 namespace cgra {
 
+// TODO: Let's do the fancy lambda shit.
 Word nop(Word lhs, Word rhs){
     return lhs+rhs;
 }
@@ -14,19 +15,18 @@ Word multiply(Word lhs, Word rhs){
     return lhs * rhs;
 }
 
-Operation::Operation(){
+Operation::Operation() {
     executionDelay = 1;
 }
 
-void Operation::loadBitstream(Config& bitstream, std::string prefix){    
-    try{
-        std::string type = bitstream.get<const char*>(prefix + ".type");
-        decode(type);
-    }
-    catch (...){
-        return;
-    }
+void Operation::loadBitstream(Config& bitstream, std::string prefix) {
+    
+    std::string type = bitstream.get<const char*>(prefix + ".type", "");
+    qassert(type != "", "Was expecting a type for {}", prefix);
+    decode(type);
 
+    // TODO: Operands should initialize themselves.
+    operands.lhs.loadBitstream(bitstream, prefix+".imm_lhs");
     try {
         operands.lhs.value[0] = bitstream.get<int32_t>(prefix+".imm_lhs");
         operands.lhs.immediate = true;
@@ -62,6 +62,10 @@ void Operation::loadBitstream(Config& bitstream, std::string prefix){
     output.ready = false;
 
     for (int i = 0; ; i++) {
+        // TODO: Finish this...
+        if (bitstream.exists(...)) {
+            break;
+        }
         try {
             Location x;
             x.pe = bitstream.get<int32_t>(qformat(prefix+".dest_{}.pe",i));
@@ -78,9 +82,10 @@ void Operation::loadBitstream(Config& bitstream, std::string prefix){
 //TODO: multiple operations per element. route to dest
 
 void Operation::decode(std::string type) {
-    if ( type == "NOP") ApplyFn = nop; 
-    else if ( type == "ADD") ApplyFn = add; 
-    else if ( type == "MULTIPLY") ApplyFn = multiply; 
+    // TODO: Fancy lambda shit.
+    if ( type == "NOP") { ApplyFn = nop; }
+    else if ( type == "ADD") { ApplyFn = add; }
+    else if ( type == "MULTIPLY") { ApplyFn = multiply; }
 } 
 
 int Operation::execute() {

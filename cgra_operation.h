@@ -75,7 +75,8 @@ public:
         Word value; //TODO: use vector here
     };
 
-    struct Location{
+    // TODO: This is effectively a pointer to an Operand. Can be deleted.
+    struct Location {
         PeIdx pe;
         OpIdx op;
         bool pos; //0 for lhs, 1 for rhs
