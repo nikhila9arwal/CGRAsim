@@ -7,12 +7,10 @@ namespace cgra {
 
 class ProcessingElement {
   public:
-    ProcessingElement(uint32_t numOps);
+    ProcessingElement(OpIdx numOps);
     ~ProcessingElement();
 
-    void loadBitstream(Config& bitstream, std::string prefix);
-
-  private:
+    void loadBitstream(Config& bitstream, std::string prefix);    
     StrongVec<OpIdx, Operation> operations;
 };
 

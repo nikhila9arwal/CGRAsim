@@ -6,6 +6,11 @@
 // namespace platy {
 // namespace sim {
 
+//(t)input_ready->(t+e)output_ready->(t+e+n)set next_input
+//break into two parts :
+//1) if operands not ready then fetch data into inputs
+//2) if operands ready execute
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,8 +20,7 @@
 #include <iostream>
 #include "cgra.h"
 #include "cgra_pe.h"
-
-#define LINE_SIZE 64
+#include "cgra_operation.h"
 
 namespace cgra {
 
@@ -35,6 +39,8 @@ public:
 
     void loadBitstream(std::string bitstreamFilename);
     void loadBitstream(Config& bitstream);
+    void loadInputs(std::string inputFilename);
+    void loadInputs(Config& inputConfig);
 
     // The CGRA model does timing and functional modeling, so this
     // simulate() does essentially nothing after a callback is
@@ -43,109 +49,31 @@ public:
     // void simulate(const Instruction& instr) override;
 
     // Run everything in the CGRA for a given cycle.
-    void tick();
-    typedef uint32_t Word;
+    // void tick();
+    void execute();
 
 private:
 
-    int numTiles;
+    // int numTiles;
     int numInputs;
-    int numOutputs;
-    static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);
-    typedef std::array<Word, NUM_VALUE_ELEMENTS> Value;
-    std::vector<Word> inputs;
-    Word * inputs; //TODO: use Value (vector) here
-
-    struct Operand {
-        bool ready;
-        // bool immediate;
-        bool scalar;
-        int32_t tile; //tile -1 means inputs
-        int32_t op;
-        Value value;
-
-        inline Word get(size_t i) const {
-            assert(ready);
-            if (scalar) {
-                return value[0];
-            } else {
-                return value[i];
-            }
+    int networkDelay;
+    // int numOutputs;
+    // std::vector<Word> inputs;
+    // Word * inputs; //TODO: use Value (vector) here
+    struct TimeSpace{
+        int32_t timestamp;
+        PeIdx pe;
+        OpIdx op;
+        TimeSpace(int32_t timestamp, PeIdx pe, OpIdx op) : timestamp(timestamp), pe(pe), op(op)
+        {
         }
+        bool operator<(const struct TimeSpace& other) const // <  ==> > for min heap
+        {
+            return timestamp > other.timestamp;
+        }
+    }
 
-        //TODO:?
-
-        // inline void reset() {
-        //     assert(ready);
-        //     if (!immediate) {
-        //         ready = false;
-        //     }
-        // }
-    };
-
-    struct Operation {
-        // enum OperationType {
-        //     NOP,
-        //     NOT,
-        //     AND,
-        //     OR,
-        //     XOR,
-        //     ADD,
-        //     SUBTRACT,
-        //     MULTIPLY,
-        //     DIVIDE,
-        //     LESSTHAN,
-        //     GREATERTHAN,
-        //     EQUALTO,
-        //     LOAD,
-        //     STORE,
-        //     SELECT,  // do we need this with fallback??? get rid of fallback???
-        //     MERGE,   // do we need these?
-        //     SPLIT,   // do we need these?
-        //     PRINT
-        // }type;
-
-
-        
-        struct Operands {
-            Operand predicate, fallback, lhs, rhs;
-
-            inline bool ready() const {
-                return predicate.ready && fallback.ready && lhs.ready && rhs.ready;
-            }
-        };
-
-        struct Output {
-            bool ready;
-            Word value; //TODO: use vector here
-        };
-
-        struct Location{
-            uint32_t tile;
-            uint32_t operation;
-            // uint32_t cbid; TODO
-        };
-
-        std::string type;
-        Operands operands;
-        Output output;
-        uint32_t dest_count;
-        Location * dest; //TODO: use vector
-
-        // TODO: callback id indexing
-        // StrongVec<CallbackIdx, Operands> operands;
-        // OperationType type;
-        // bool scalar;
-        // TileIdx dstPE;
-        // OpIdx dstOp;
-
-        CGRACore::Word (*ApplyFn)(CGRACore::Word lhs, CGRACore::Word rhs);
-        void decode();
-        //TODO: use callbackindex here?
-        void execute();
-
-        StrongVec<PeIdx, ProcessingElement> processingElements;
-    };
+    StrongVec<PeIdx, ProcessingElement> processingElements;
 };
 
 } // namespace cgra
