@@ -22,30 +22,28 @@ Operation::Operation() {
 void Operation::loadBitstream(Config& bitstream, std::string prefix) {
     
     std::string type = bitstream.get<const char*>(prefix + ".type", "");
-    qassert(type != "", "Was expecting a type for {}", prefix);
+    qassert(type != "");
     decode(type);
 
     // TODO: Operands should initialize themselves.
-    operands.lhs.loadBitstream(bitstream, prefix+".imm_lhs");
-    try {
+    // operands.lhs.loadBitstream(bitstream, prefix+".imm_lhs");
+    if (bitstream.exists(prefix+".imm_lhs")){
         operands.lhs.value[0] = bitstream.get<int32_t>(prefix+".imm_lhs");
         operands.lhs.immediate = true;
         operands.lhs.scalar = true;
         operands.lhs.ready = true;
-    }
-    catch (...) {
+    }else{
         operands.lhs.immediate = false;
         operands.lhs.scalar = true;
         operands.lhs.ready = false;
     }
 
-    try {
+    if (bitstream.exists(prefix+".imm_rhs")){
         operands.rhs.value[0] = bitstream.get<int32_t>(prefix+".imm_rhs");
         operands.rhs.immediate = true;
         operands.rhs.scalar = true;
         operands.rhs.ready = true;
-    }
-    catch (...) {
+    }else{
         operands.rhs.immediate = false;
         operands.rhs.scalar = true;
         operands.rhs.ready = false;
@@ -62,17 +60,17 @@ void Operation::loadBitstream(Config& bitstream, std::string prefix) {
     output.ready = false;
 
     for (int i = 0; ; i++) {
-        // TODO: Finish this...
-        if (bitstream.exists(...)) {
-            break;
-        }
-        try {
+        // // TODO: Finish this...
+        // if (bitstream.exists(...)) {
+        //     break;
+        // }
+        if(bitstream.exists(prefix+qformat(".dest_{}",i))) {
             Location x;
-            x.pe = bitstream.get<int32_t>(qformat(prefix+".dest_{}.pe",i));
-            x.op = bitstream.get<int32_t>(qformat(prefix+".dest_{}.op",i));
-            x.pos = bitstream.get<int32_t>(qformat(prefix+".dest_{}.pos",i));
+            x.pe = (PeIdx)bitstream.get<int32_t>(prefix+qformat(".dest_{}.pe",i));
+            x.op = (OpIdx)bitstream.get<int32_t>(prefix+qformat(".dest_{}.op",i));
+            x.pos = bitstream.get<int32_t>(prefix+qformat(".dest_{}.pos",i));
             dest.push_back(x);
-        } catch (...) {
+        } else{
             break;
         }
     }

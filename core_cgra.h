@@ -12,15 +12,9 @@
 //2) if operands ready execute
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "config.h" //TODO: fix this
-#include <array> 
-#include <iostream>
+#include <queue>
 #include "cgra.h"
 #include "cgra_pe.h"
-#include "cgra_operation.h"
 
 namespace cgra {
 
@@ -35,7 +29,7 @@ public:
 
     // TODO: routing
     CGRACore(uint32_t numPes, uint32_t numOps);
-    ~CGRACore();
+    // ~CGRACore();
 
     void loadBitstream(std::string bitstreamFilename);
     void loadBitstream(Config& bitstream);
@@ -49,14 +43,16 @@ public:
     // void simulate(const Instruction& instr) override;
 
     // Run everything in the CGRA for a given cycle.
-    // void tick();
+    void tick();
     void execute();
 
 private:
 
     // int numTiles;
+    int now;
     int numInputs;
     int networkDelay;
+
     // int numOutputs;
     // std::vector<Word> inputs;
     // Word * inputs; //TODO: use Value (vector) here
@@ -71,8 +67,8 @@ private:
         {
             return timestamp > other.timestamp;
         }
-    }
-
+    };
+    std::priority_queue<TimeSpace> pq; 
     StrongVec<PeIdx, ProcessingElement> processingElements;
 };
 

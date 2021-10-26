@@ -28,6 +28,7 @@ class Operation {
 public:
 
     Operation();
+    // ~Operation();
 
     struct Operand {
         bool ready;
@@ -35,7 +36,7 @@ public:
         bool scalar;
         Value value;
 
-        inline Word get(size_t i) const {
+        inline Word get(size_t i) {
             assert(ready);
             if (scalar) {
                 return value[0];
@@ -44,7 +45,7 @@ public:
             }
         }
 
-        inline void set(Word val) const {
+        inline void set(Word val) {
             assert(!ready && !immediate);
             if (scalar) {
                 value[0] = val;
@@ -98,5 +99,6 @@ public:
     void decode(std::string type);
     //TODO: use callbackindex here?
     int execute();
-    };
 };
+
+} // namespace cgra

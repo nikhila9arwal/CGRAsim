@@ -9,22 +9,27 @@
 
 namespace cgra {
 
+//TODO: eforce type
 CGRACore::CGRACore(uint32_t numPes, uint32_t numOps) {
     networkDelay = 2;
-    for (PeIdx p = 0; p < (PeIdx)numPes; p++) {
-        processingElements.emplace_back(ProcessingElement{(OpIdx)numOps});
+    for (PeIdx p = 0_peid; p < (PeIdx)numPes; p++) {
+        // processingElements.emplace_back(ProcessingElement{(OpIdx)numOps});
+        processingElements.push_back(ProcessingElement((OpIdx)numOps));
     }
 }
 
-void CGRACore::loadBitstream(std::stream bitstreamFilename) {
+void CGRACore::loadBitstream(std::string bitstreamFilename) {
+
     Config conf(bitstreamFilename.c_str());
+    // std::cout<<"here";
+
 
     loadBitstream(conf);
 }
 
 void CGRACore::loadBitstream(Config& bitstream) {
     // read inputs until there are none left
-    for (int i = 0; ; i++){
+    for (PeIdx i = 0_peid; ; i++){
         std::string s = qformat("pe_{}",i);
         if (bitstream.exists(s)) {
             assert(i<processingElements.size());
@@ -33,20 +38,11 @@ void CGRACore::loadBitstream(Config& bitstream) {
             break;
         }
     }
-
-    // for (int i = 0; ; i++) {
-    //     try {
-    //         Word input = bitstream.get<Word>(qformat("sys.inputs_{}", i));
-    //         inputs.push_back(input);
-    //     } catch (...) {
-    //         break;
-    //     }
-    // }
 }
 
 void CGRACore::loadInputs(std::string inputFilename){
     Config conf(inputFilename.c_str());
-    loadBitstream(conf);
+    loadInputs(conf);
 }
 
 void CGRACore::loadInputs(Config& inputConfig){
@@ -54,18 +50,18 @@ void CGRACore::loadInputs(Config& inputConfig){
         std::string s = qformat("input_{}",i);
         if (inputConfig.exists(s)){
             assert(i<numInputs);
-            Word val = inputConfig.get<int32_t>(s + ".value"));                 
+            Word val = inputConfig.get<int32_t>(s + ".value");                 
             for (int j=0; ;j++){
-                try{
-                    PeIdx pe = inputConfig.get<int32_t>(s + qformat(".dest_{}.pe",j));
-                    OpIdx op = inputConfig.get<int32_t>(s + qformat(".dest_{}.op",j));
+                if(inputConfig.exists(s + qformat(".dest_{}",j))){
+                    PeIdx pe = (PeIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.pe",j));
+                    OpIdx op = (OpIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.op",j));
                     bool pos = inputConfig.get<int32_t>(s + qformat(".dest_{}.pos",j));
                     if(pos)
                         processingElements[pe].operations[op].operands.rhs.set(val);
                     else
                         processingElements[pe].operations[op].operands.lhs.set(val);
                 }
-                catch(...){
+                else{
                     break;
                 }
             }
@@ -115,27 +111,28 @@ void CGRACore::loadInputs(Config& inputConfig){
 
 // TODO: Re-write to call tick().
 void CGRACore::tick() {
-    while(!pq.empty() && pq.top().timestamp <= events::now()) {
+    while(!pq.empty() && pq.top().timestamp <= now) {
         TimeSpace x = pq.top();
         pq.pop();
 
         // TODO: All of this should be in ProcessingElement::execute
-        Operation &op = processingElements[x.pe].operation[x.op];
+        Operation &op = processingElements[x.pe].operations[x.op];
         op.execute();
+        std::cout<<op.output.value<<"\n";
         if (op.output.ready) {
-            for (int i = 0; i < op.dest.size(); op++) {
+            for (uint32_t i = 0; i < op.dest.size(); i++) {
                 // shouldn't the dest just be a Operand* ???
-                auto &dest = op.dest[i];
+                auto &dest = processingElements[op.dest[i].pe].operations[op.dest[i].op];
                 
-                if (dest.pos) {
-                    processingElements[dest.pe].operation[dest.op].operands.rhs.set(op.output.value);
+                if (op.dest[i].pos) {
+                    dest.operands.rhs.set(op.output.value);
                 } else {
-                    processingElements[dest.pe].operation[dest.op].operands.lhs.set(op.output.value);
+                    dest.operands.lhs.set(op.output.value);
                 }
                 
                 if (dest.operands.ready()) {
                     // TODO: Too much stuff happening in one line.
-                    pq.push(TimeSpace(x.timestamp+op.executionDelay+networkDelay,dest.pe,dest.op));
+                    pq.push(TimeSpace(x.timestamp+op.executionDelay+networkDelay,op.dest[i].pe,op.dest[i].op));
                 }
             }
         }
@@ -144,11 +141,10 @@ void CGRACore::tick() {
 }
 
 void CGRACore::execute(){
-    std::priority_queue<TimeSpace> pq; 
 
     //initial check for what's ready
-    for (PeIdx p = 0; p < processingElements.size(); p++) {
-        for (OpIdx o = 0; o < processingElements[p].size(); o++) {
+    for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
+        for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
             if (processingElements[p].operations[o].operands.ready()) {
                 pq.push(TimeSpace{0,p,o});
             }

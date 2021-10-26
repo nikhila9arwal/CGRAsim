@@ -45,6 +45,7 @@
         return StrongType(static_cast<Repr>(x));                                   \
     }
 
+
 // Diff differentiates types with the same repr
 template <typename Repr, typename Diff>
 class StrongInt {
