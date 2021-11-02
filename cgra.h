@@ -15,7 +15,7 @@
 
 DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
-// DERIVE_STRONGER_INT(CallbackIdx, int32_t, cbid)
+DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
 
 typedef uint32_t Word;
 static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);

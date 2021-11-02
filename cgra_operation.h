@@ -46,7 +46,8 @@ public:
         }
 
         inline void set(Word val) {
-            assert(!ready && !immediate);
+            assert(!ready);
+            assert(!immediate);
             if (scalar) {
                 value[0] = val;
                 ready = true;
@@ -84,7 +85,8 @@ public:
     // uint32_t cbid; TODO
     };
 
-    Operands operands;
+    // Operands operands;
+    StrongVec<CbIdx, Operands> operands;
     Output output;
     std::vector<Location> dest;
     Word (*ApplyFn)(Word lhs, Word rhs);
@@ -98,7 +100,7 @@ public:
     void loadBitstream(Config& bitstream, std::string prefix);
     void decode(std::string type);
     //TODO: use callbackindex here?
-    int execute();
+    int execute(CbIdx cbidx);
 };
 
 } // namespace cgra

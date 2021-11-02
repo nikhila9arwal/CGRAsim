@@ -15,10 +15,13 @@ Word multiply(Word lhs, Word rhs){
     return lhs * rhs;
 }
 
-Operation::Operation() {
+// TODO:
+Operation::Operation(/*CbIdx max*/){
     executionDelay = 1;
+    for(CbIdx i = 0_cbid; i<8_cbid; i++){
+        operands.push_back(Operands());
+    }
 }
-
 void Operation::loadBitstream(Config& bitstream, std::string prefix) {
     
     std::string type = bitstream.get<const char*>(prefix + ".type", "");
@@ -28,35 +31,47 @@ void Operation::loadBitstream(Config& bitstream, std::string prefix) {
     // TODO: Operands should initialize themselves.
     // operands.lhs.loadBitstream(bitstream, prefix+".imm_lhs");
     if (bitstream.exists(prefix+".imm_lhs")){
-        operands.lhs.value[0] = bitstream.get<int32_t>(prefix+".imm_lhs");
-        operands.lhs.immediate = true;
-        operands.lhs.scalar = true;
-        operands.lhs.ready = true;
+        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
+            operands[i].lhs.value[0] = bitstream.get<int32_t>(prefix+".imm_lhs");
+            operands[i].lhs.immediate = true;
+            operands[i].lhs.scalar = true;
+            operands[i].lhs.ready = true;
+        }
     }else{
-        operands.lhs.immediate = false;
-        operands.lhs.scalar = true;
-        operands.lhs.ready = false;
+        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
+            operands[i].lhs.immediate = false;
+            operands[i].lhs.scalar = true;
+            operands[i].lhs.ready = false;
+        }
     }
 
     if (bitstream.exists(prefix+".imm_rhs")){
-        operands.rhs.value[0] = bitstream.get<int32_t>(prefix+".imm_rhs");
-        operands.rhs.immediate = true;
-        operands.rhs.scalar = true;
-        operands.rhs.ready = true;
+        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
+            operands[i].rhs.value[0] = bitstream.get<int32_t>(prefix+".imm_rhs");
+            operands[i].rhs.immediate = true;
+            operands[i].rhs.scalar = true;
+            operands[i].rhs.ready = true;
+        }
     }else{
-        operands.rhs.immediate = false;
-        operands.rhs.scalar = true;
-        operands.rhs.ready = false;
+        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
+            operands[i].rhs.immediate = false;
+            operands[i].rhs.scalar = true;
+            operands[i].rhs.ready = false;
+        }
     }
+    
+    for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
 
-    operands.predicate.immediate = false;
-    operands.predicate.scalar = true;
-    operands.predicate.ready = true;
+        operands[i].predicate.immediate = false;
+        operands[i].predicate.scalar = true;
+        operands[i].predicate.ready = true;
+        
+        operands[i].fallback.immediate = false;
+        operands[i].fallback.scalar = true;
+        operands[i].fallback.ready = true;
 
-    operands.fallback.immediate = false;
-    operands.fallback.scalar = true;
-    operands.fallback.ready = true;
-
+    }
+    
     output.ready = false;
 
     for (int i = 0; ; i++) {
@@ -86,12 +101,12 @@ void Operation::decode(std::string type) {
     else if ( type == "MULTIPLY") { ApplyFn = multiply; }
 } 
 
-int Operation::execute() {
+int Operation::execute(CbIdx cbidx) {
     //TODO: use cbid
     // Operands& ops = operands[idx];
     // assert(operands.ready());
 
-    if(!operands.ready())
+    if(!operands[cbidx].ready())
         return 1;
     
     // decode
@@ -110,7 +125,7 @@ int Operation::execute() {
     //     }
     // }
 
-    output.value = ApplyFn(operands.lhs.get(0), operands.rhs.get(0));
+    output.value = ApplyFn(operands[cbidx].lhs.get(0), operands[cbidx].rhs.get(0));
     output.ready = true;
 
     return 0;

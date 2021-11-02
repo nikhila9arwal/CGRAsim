@@ -50,8 +50,9 @@ private:
 
     // int numTiles;
     int now;
-    int numInputs;
+    // int numInputs;
     int networkDelay;
+    CbIdx cbidx;
 
     // int numOutputs;
     // std::vector<Word> inputs;
@@ -60,7 +61,8 @@ private:
         int32_t timestamp;
         PeIdx pe;
         OpIdx op;
-        TimeSpace(int32_t timestamp, PeIdx pe, OpIdx op) : timestamp(timestamp), pe(pe), op(op)
+        CbIdx cb;
+        TimeSpace(int32_t timestamp, PeIdx pe, OpIdx op, CbIdx cb) : timestamp(timestamp), pe(pe), op(op), cb(cb)
         {
         }
         bool operator<(const struct TimeSpace& other) const // <  ==> > for min heap
