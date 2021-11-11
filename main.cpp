@@ -2,7 +2,7 @@
 #include "core_cgra.h"
 
 int main(){
-    cgra::CGRACore core(4,4);
+    cgra::CGRACore core(4,4,4);
     core.loadBitstream("outdataflow.cfg");
     core.loadInputs("outdataflow.cfg");
     core.loadInputs("outdataflow.cfg");

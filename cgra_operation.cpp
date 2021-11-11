@@ -2,89 +2,34 @@
 
 namespace cgra {
 
-// TODO: Let's do the fancy lambda shit.
-Word nop(Word lhs, Word rhs){
-    return lhs+rhs;
-}
-
-Word add(Word lhs, Word rhs){
-    return lhs + rhs;
-}
-
-Word multiply(Word lhs, Word rhs){
-    return lhs * rhs;
-}
-
-// TODO:
-Operation::Operation(/*CbIdx max*/){
+Operation::Operation(PeIdx numPes, OpIdx numOps, CbIdx numThrds){
     executionDelay = 1;
-    for(CbIdx i = 0_cbid; i<8_cbid; i++){
+    for(CbIdx i = 0_cbid; i<numThrds; i++){
         operands.push_back(Operands());
     }
+
+    //TODO: unused param error;
+    numPes++;
+    numOps++;
+    // for (int32_t i=0; i< (int32_t)numPes*(int32_t)numOps*2; i++ ){
+    //     dest.push_back(Location());
+    // }
 }
+
 void Operation::loadBitstream(Config& bitstream, std::string prefix) {
     
     std::string type = bitstream.get<const char*>(prefix + ".type", "");
     qassert(type != "");
     decode(type);
 
-    // TODO: Operands should initialize themselves.
-    // operands.lhs.loadBitstream(bitstream, prefix+".imm_lhs");
-    if (bitstream.exists(prefix+".imm_lhs")){
-        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
-            operands[i].lhs.value[0] = bitstream.get<int32_t>(prefix+".imm_lhs");
-            operands[i].lhs.immediate = true;
-            operands[i].lhs.scalar = true;
-            operands[i].lhs.ready = true;
-        }
-    }else{
-        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
-            operands[i].lhs.immediate = false;
-            operands[i].lhs.scalar = true;
-            operands[i].lhs.ready = false;
-        }
-    }
-
-    if (bitstream.exists(prefix+".imm_rhs")){
-        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
-            operands[i].rhs.value[0] = bitstream.get<int32_t>(prefix+".imm_rhs");
-            operands[i].rhs.immediate = true;
-            operands[i].rhs.scalar = true;
-            operands[i].rhs.ready = true;
-        }
-    }else{
-        for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
-            operands[i].rhs.immediate = false;
-            operands[i].rhs.scalar = true;
-            operands[i].rhs.ready = false;
-        }
-    }
-    
     for(CbIdx i = 0_cbid; i<(CbIdx)operands.size(); i++){
-
-        operands[i].predicate.immediate = false;
-        operands[i].predicate.scalar = true;
-        operands[i].predicate.ready = true;
-        
-        operands[i].fallback.immediate = false;
-        operands[i].fallback.scalar = true;
-        operands[i].fallback.ready = true;
-
+        operands[i].loadBitstream(bitstream, prefix);
     }
-    
-    output.ready = false;
 
     for (int i = 0; ; i++) {
-        // // TODO: Finish this...
-        // if (bitstream.exists(...)) {
-        //     break;
-        // }
         if(bitstream.exists(prefix+qformat(".dest_{}",i))) {
-            Location x;
-            x.pe = (PeIdx)bitstream.get<int32_t>(prefix+qformat(".dest_{}.pe",i));
-            x.op = (OpIdx)bitstream.get<int32_t>(prefix+qformat(".dest_{}.op",i));
-            x.pos = bitstream.get<int32_t>(prefix+qformat(".dest_{}.pos",i));
-            dest.push_back(x);
+            dest.push_back(Location());
+            dest[i].loadBitstream(bitstream,prefix+qformat(".dest_{}",i));
         } else{
             break;
         }
@@ -95,10 +40,44 @@ void Operation::loadBitstream(Config& bitstream, std::string prefix) {
 //TODO: multiple operations per element. route to dest
 
 void Operation::decode(std::string type) {
-    // TODO: Fancy lambda shit.
-    if ( type == "NOP") { ApplyFn = nop; }
-    else if ( type == "ADD") { ApplyFn = add; }
-    else if ( type == "MULTIPLY") { ApplyFn = multiply; }
+    if ( type == "NOP"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs + rhs;};
+    }else if ( type == "NOT"){
+        ApplyFn = [](Word lhs, Word rhs){return ~(lhs+rhs);};
+    }else if ( type == "AND"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs & rhs;};
+    }else if ( type == "OR"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs | rhs;};
+    }else if ( type == "XOR"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs ^ rhs;};
+    }else if ( type == "ADD"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs + rhs;};
+    }else if ( type == "SUBTRACT"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs - rhs;};
+    }else if ( type == "MULTIPLY"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};
+    }else if ( type == "DIVIDE"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs / rhs;};
+    }else if ( type == "LESSTHAN"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs < rhs ? 1:0;;};
+    }else if ( type == "GREATERTHAN"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs > rhs ? 1:0;;};
+    }else if ( type == "EQUALTO"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs == rhs ? 1:0;};
+    }//else if ( type == "LOAD"){
+    //     ApplyFn = [](Word lhs, Word rhs){return *(Word*)(lhs+rhs);};
+    // }else if ( type == "STORE"){
+    //     ApplyFn = [](Word lhs, Word rhs){*(Word*)lhs  = rhs; return 0;};
+    // }else if ( type == "SELECT"){
+    //     ApplyFn = [](Word lhs, Word rhs){if (lhs) return rhs; else return -1;};
+    // }//else if ( type == "MERGE"){
+    //     ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};
+    // }else if ( type == "SPLIT"){
+    //     ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};
+    // }else if ( type == "PRINT"){
+    //     ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};
+    // }
+    
 } 
 
 int Operation::execute(CbIdx cbidx) {

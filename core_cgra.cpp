@@ -10,13 +10,13 @@
 namespace cgra {
 
 //TODO: eforce type
-CGRACore::CGRACore(uint32_t numPes, uint32_t numOps) {
+CGRACore::CGRACore(uint32_t numPes, uint32_t numOps, uint32_t numThrds) {
     networkDelay = 2;
     cbidx = 0_cbid;
     now = 0;
     for (PeIdx p = 0_peid; p < (PeIdx)numPes; p++) {
         // processingElements.emplace_back(ProcessingElement{(OpIdx)numOps});
-        processingElements.push_back(ProcessingElement((OpIdx)numOps));
+        processingElements.push_back(ProcessingElement((PeIdx)numPes, (OpIdx)numOps, (CbIdx)numThrds));
     }
 }
 
@@ -75,7 +75,7 @@ void CGRACore::loadInputs(Config& inputConfig){
     //initial check for what's ready
     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
         for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
-            if (processingElements[p].operations[o].operands[cbidx].ready()) {
+            if(processingElements[p].operations[o].operands[cbidx].ready()) {
                 pq.push(TimeSpace{(int32_t)cbidx,p,o,cbidx});
             }
         }

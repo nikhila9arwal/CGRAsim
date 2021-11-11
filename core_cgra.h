@@ -28,7 +28,7 @@ public:
     // during mapping.
 
     // TODO: routing
-    CGRACore(uint32_t numPes, uint32_t numOps);
+    CGRACore(uint32_t numPes, uint32_t numOps, uint32_t numThrds);
     // ~CGRACore();
 
     void loadBitstream(std::string bitstreamFilename);

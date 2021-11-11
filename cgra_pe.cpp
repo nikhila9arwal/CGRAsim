@@ -2,10 +2,10 @@
 
 namespace cgra {
 
-ProcessingElement::ProcessingElement(OpIdx numOps){
+ProcessingElement::ProcessingElement(PeIdx numPes, OpIdx numOps, CbIdx numThrds){
     for(OpIdx i=0_opid; i<numOps; i++) {
         // operations.emplace_back(Operation{});
-        operations.push_back(Operation()); //difference betwen push an emplace
+        operations.push_back(Operation(numPes,numOps,numThrds)); //difference betwen push an emplace
     }
 }
 
@@ -20,7 +20,6 @@ void ProcessingElement::loadBitstream(Config& bitstream, std::string prefix) {
         }
     }
 }
-
     
 
 } // namespace cgra
