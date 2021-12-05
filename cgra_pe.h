@@ -15,7 +15,7 @@ class ProcessingElement {
 
     StrongVec<OpIdx, Operation> operations;
    
-    // std::vector<Operation::Operands> tokenstore;
+    std::vector<Operation::Operands> tokenstore;
 };
 
 } // namespace cgra

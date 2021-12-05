@@ -81,21 +81,6 @@ public:
         Output(){ready = false;}
     };
 
-    // TODO: This is effectively a pointer to an Operand. Can be deleted.
-    struct Location {
-        PeIdx pe;
-        OpIdx op;
-        bool pos; //0 for lhs, 1 for rhs
-        inline void loadBitstream(Config& bitstream, std::string prefix){
-            if (bitstream.exists(prefix)){
-                pe = (PeIdx)bitstream.get<int32_t>(prefix+".pe");
-                op = (OpIdx)bitstream.get<int32_t>(prefix+".op");
-                pos = (bool)bitstream.get<int32_t>(prefix+".pos");
-            }
-        }
-    // uint32_t cbid; TODO
-    };
-
     // Operands operands;
     StrongVec<CbIdx, Operands> operands;
     Output output;

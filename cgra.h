@@ -17,9 +17,21 @@ DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
 DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
 
-typedef int32_t Word;
+typedef int64_t Word;
 static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);
 typedef std::array<Word, NUM_VALUE_ELEMENTS> Value;
 
-
+// TODO: This is effectively a pointer to an Operand. Can be deleted.
+    struct Location {
+        PeIdx pe;
+        OpIdx op;
+        bool pos; //0 for lhs, 1 for rhs
+        inline void loadBitstream(Config& bitstream, std::string prefix){
+            if (bitstream.exists(prefix)){
+                pe = (PeIdx)bitstream.get<int32_t>(prefix+".pe");
+                op = (OpIdx)bitstream.get<int32_t>(prefix+".op");
+                pos = (bool)bitstream.get<int32_t>(prefix+".pos");
+            }
+        }
+    };
 // } // namespace cgra

@@ -50,6 +50,10 @@ void Operation::decode(std::string type) {
         ApplyFn = [](Word lhs, Word rhs){return lhs | rhs;};
     }else if ( type == "XOR"){
         ApplyFn = [](Word lhs, Word rhs){return lhs ^ rhs;};
+    }else if ( type == "LSHIFT"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs << rhs;};
+    }else if ( type == "RSHIFT"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs >> rhs;};
     }else if ( type == "ADD"){
         ApplyFn = [](Word lhs, Word rhs){return lhs + rhs;};
     }else if ( type == "SUBTRACT"){
@@ -59,16 +63,18 @@ void Operation::decode(std::string type) {
     }else if ( type == "DIVIDE"){
         ApplyFn = [](Word lhs, Word rhs){return lhs / rhs;};
     }else if ( type == "LESSTHAN"){
-        ApplyFn = [](Word lhs, Word rhs){return lhs < rhs ? 1:0;;};
+        ApplyFn = [](Word lhs, Word rhs){return lhs < rhs ? (Word)1:(Word)0;};
     }else if ( type == "GREATERTHAN"){
-        ApplyFn = [](Word lhs, Word rhs){return lhs > rhs ? 1:0;;};
+        ApplyFn = [](Word lhs, Word rhs){return lhs > rhs ? (Word)1:(Word)0;};
     }else if ( type == "EQUALTO"){
-        ApplyFn = [](Word lhs, Word rhs){return lhs == rhs ? 1:0;};
-    }//else if ( type == "LOAD"){
-    //     ApplyFn = [](Word lhs, Word rhs){return *(Word*)(lhs+rhs);};
-    // }else if ( type == "STORE"){
-    //     ApplyFn = [](Word lhs, Word rhs){*(Word*)lhs  = rhs; return 0;};
-    // }else if ( type == "SELECT"){
+        ApplyFn = [](Word lhs, Word rhs){return lhs == rhs ? (Word)1:(Word)0;};
+    }else if ( type == "LOAD"){
+        ApplyFn = [](Word lhs, Word rhs){return  * ((Word*)lhs+ rhs);};
+    }else if ( type == "STORE"){
+        ApplyFn = [](Word lhs, Word rhs){*(Word*)lhs  = rhs; return (Word)0;};
+    }
+    
+    //else if ( type == "SELECT"){
     //     ApplyFn = [](Word lhs, Word rhs){if (lhs) return rhs; else return -1;};
     // }//else if ( type == "MERGE"){
     //     ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};

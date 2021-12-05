@@ -27,6 +27,7 @@ void CGRACore::loadBitstream(std::string bitstreamFilename) {
 
 
     loadBitstream(conf);
+    loadInputs(conf);
 }
 
 void CGRACore::loadBitstream(Config& bitstream) {
@@ -42,28 +43,21 @@ void CGRACore::loadBitstream(Config& bitstream) {
     }
 }
 
-void CGRACore::loadInputs(std::string inputFilename){
-    Config conf(inputFilename.c_str());
-    loadInputs(conf);
-}
-
 void CGRACore::loadInputs(Config& inputConfig){
     for (int i=0; ; i++){
         std::string s = qformat("input_{}",i);
         if (inputConfig.exists(s)){
             // assert(i<numInputs);
-            Word val = inputConfig.get<int32_t>(s + ".value");                 
+            // Word val = inputConfig.get<int32_t>(s + ".value");                 
+            std::vector<Location> tempV;
             for (int j=0; ;j++){
                 if(inputConfig.exists(s + qformat(".dest_{}",j))){
-                    PeIdx pe = (PeIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.pe",j));
-                    OpIdx op = (OpIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.op",j));
-                    bool pos = inputConfig.get<int32_t>(s + qformat(".dest_{}.pos",j));
-                    if(pos)
-                        processingElements[pe].operations[op].operands[cbidx].rhs.set(val);
-                    else
-                        processingElements[pe].operations[op].operands[cbidx].lhs.set(val);
+                    Location tempL;
+                    tempL.loadBitstream(inputConfig, s + qformat(".dest_{}",j));
+                    tempV.push_back(tempL);
                 }
                 else{
+                    inputMap.push_back(tempV);
                     break;
                 }
             }
@@ -72,6 +66,21 @@ void CGRACore::loadInputs(Config& inputConfig){
             break;
         }
     }
+
+
+}
+
+void CGRACore::loadInputs(Word * input){
+    for (unsigned int i=0; i<inputMap.size(); i++){
+        for (unsigned int j=0; j<inputMap[i].size(); j++){
+            if(inputMap[i][j].pos){
+                processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].rhs.set(input[i]);
+            }else{
+                processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].lhs.set(input[i]);
+            }
+        }
+    }
+
     //initial check for what's ready
     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
         for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
@@ -80,9 +89,51 @@ void CGRACore::loadInputs(Config& inputConfig){
             }
         }
     }
-
     cbidx = cbidx + 1_cbid;
+
 }
+
+// void CGRACore::loadInputs(std::string inputFilename){
+//     Config conf(inputFilename.c_str());
+//     loadInputs(conf);
+// }
+
+// void CGRACore::loadInputs(Config& inputConfig){
+//     for (int i=0; ; i++){
+//         std::string s = qformat("input_{}",i);
+//         if (inputConfig.exists(s)){
+//             // assert(i<numInputs);
+//             Word val = inputConfig.get<int32_t>(s + ".value");                 
+//             for (int j=0; ;j++){
+//                 if(inputConfig.exists(s + qformat(".dest_{}",j))){
+//                     PeIdx pe = (PeIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.pe",j));
+//                     OpIdx op = (OpIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.op",j));
+//                     bool pos = inputConfig.get<int32_t>(s + qformat(".dest_{}.pos",j));
+//                     if(pos)
+//                         processingElements[pe].operations[op].operands[cbidx].rhs.set(val);
+//                     else
+//                         processingElements[pe].operations[op].operands[cbidx].lhs.set(val);
+//                 }
+//                 else{
+//                     break;
+//                 }
+//             }
+//         }
+//         else{
+//             break;
+//         }
+//     }
+//     //initial check for what's ready
+//     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
+//         for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
+//             if(processingElements[p].operations[o].operands[cbidx].ready()) {
+//                 pq.push(TimeSpace{(int32_t)cbidx,p,o,cbidx});
+//             }
+//         }
+//     }
+
+//     cbidx = cbidx + 1_cbid;
+// }
         
 // //TODO : timing info for network, processing etc.
 // void CGRACore::tick(){

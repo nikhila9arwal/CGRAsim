@@ -33,7 +33,8 @@ public:
 
     void loadBitstream(std::string bitstreamFilename);
     void loadBitstream(Config& bitstream);
-    void loadInputs(std::string inputFilename);
+    // void loadInputs(std::string inputFilename);
+    void loadInputs(Word * input);
     void loadInputs(Config& inputConfig);
 
     // The CGRA model does timing and functional modeling, so this
@@ -72,6 +73,8 @@ private:
     };
     std::priority_queue<TimeSpace> pq; 
     StrongVec<PeIdx, ProcessingElement> processingElements;
+
+    std::vector<std::vector<Location>> inputMap;
 };
 
 } // namespace cgra

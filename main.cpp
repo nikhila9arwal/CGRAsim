@@ -4,8 +4,10 @@
 int main(){
     cgra::CGRACore core(4,4,4);
     core.loadBitstream("outdataflow.cfg");
-    core.loadInputs("outdataflow.cfg");
-    core.loadInputs("outdataflow.cfg");
+
+    Word inputs[3] = {1,2,3};
+    core.loadInputs(inputs);
+    core.loadInputs(inputs);
     core.execute();
     return 0;
 }
