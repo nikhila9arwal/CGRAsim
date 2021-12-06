@@ -27,7 +27,7 @@ void CGRACore::loadBitstream(std::string bitstreamFilename) {
 
 
     loadBitstream(conf);
-    loadInputs(conf);
+    loadInputMap(conf);
 }
 
 void CGRACore::loadBitstream(Config& bitstream) {
@@ -43,7 +43,7 @@ void CGRACore::loadBitstream(Config& bitstream) {
     }
 }
 
-void CGRACore::loadInputs(Config& inputConfig){
+void CGRACore::loadInputMap(Config& inputConfig){
     for (int i=0; ; i++){
         std::string s = qformat("input_{}",i);
         if (inputConfig.exists(s)){
@@ -73,10 +73,12 @@ void CGRACore::loadInputs(Config& inputConfig){
 void CGRACore::loadInputs(Word * input){
     for (unsigned int i=0; i<inputMap.size(); i++){
         for (unsigned int j=0; j<inputMap[i].size(); j++){
-            if(inputMap[i][j].pos){
-                processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].rhs.set(input[i]);
-            }else{
+            if(inputMap[i][j].pos == 0_posid){
                 processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].lhs.set(input[i]);
+            }else if (inputMap[i][j].pos == 1_posid){
+                processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].rhs.set(input[i]);
+            }else if (inputMap[i][j].pos == 2_posid){
+                processingElements[inputMap[i][j].pe].operations[inputMap[i][j].op].operands[cbidx].trigger = (bool)input[i];
             }
         }
     }
@@ -91,50 +93,7 @@ void CGRACore::loadInputs(Word * input){
     }
     cbidx = cbidx + 1_cbid;
 
-}
-
-// void CGRACore::loadInputs(std::string inputFilename){
-//     Config conf(inputFilename.c_str());
-//     loadInputs(conf);
-// }
-
-// void CGRACore::loadInputs(Config& inputConfig){
-//     for (int i=0; ; i++){
-//         std::string s = qformat("input_{}",i);
-//         if (inputConfig.exists(s)){
-//             // assert(i<numInputs);
-//             Word val = inputConfig.get<int32_t>(s + ".value");                 
-//             for (int j=0; ;j++){
-//                 if(inputConfig.exists(s + qformat(".dest_{}",j))){
-//                     PeIdx pe = (PeIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.pe",j));
-//                     OpIdx op = (OpIdx)inputConfig.get<int32_t>(s + qformat(".dest_{}.op",j));
-//                     bool pos = inputConfig.get<int32_t>(s + qformat(".dest_{}.pos",j));
-//                     if(pos)
-//                         processingElements[pe].operations[op].operands[cbidx].rhs.set(val);
-//                     else
-//                         processingElements[pe].operations[op].operands[cbidx].lhs.set(val);
-//                 }
-//                 else{
-//                     break;
-//                 }
-//             }
-//         }
-//         else{
-//             break;
-//         }
-//     }
-//     //initial check for what's ready
-//     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
-//         for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
-//             if(processingElements[p].operations[o].operands[cbidx].ready()) {
-//                 pq.push(TimeSpace{(int32_t)cbidx,p,o,cbidx});
-//             }
-//         }
-//     }
-
-//     cbidx = cbidx + 1_cbid;
-// }
-        
+}        
 // //TODO : timing info for network, processing etc.
 // void CGRACore::tick(){
 
@@ -181,16 +140,19 @@ void CGRACore::tick() {
         // TODO: All of this should be in ProcessingElement::execute
         Operation &op = processingElements[x.pe].operations[x.op];
         op.execute(x.cb);
-        std::cout<<"thread"<<x.cb<<": "<<op.output.value<<"\n";
+        std::cout<<"thread"<<x.cb<<", pe"<<x.pe<<", op"<<x.op<<" : "<<op.output.value<<"\n";
         // if (op.output.ready) {
             for (uint32_t i = 0; i < op.dest.size(); i++) {
                 // shouldn't the dest just be a Operand* ???
                 auto &dest = processingElements[op.dest[i].pe].operations[op.dest[i].op];
                 
-                if (op.dest[i].pos) {
-                    dest.operands[x.cb].rhs.set(op.output.value);
-                } else {
+                if (op.dest[i].pos == 0_posid) {
                     dest.operands[x.cb].lhs.set(op.output.value);
+                } else if(op.dest[i].pos == 1_posid) {
+                    dest.operands[x.cb].rhs.set(op.output.value);
+                }
+                else if(op.dest[i].pos == 1_posid){
+                    dest.operands[x.cb].trigger = (bool) op.output.value;
                 }
                 
                 if (dest.operands[x.cb].ready()) {

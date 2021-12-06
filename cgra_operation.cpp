@@ -56,11 +56,11 @@ void Operation::decode(std::string type) {
         ApplyFn = [](Word lhs, Word rhs){return lhs >> rhs;};
     }else if ( type == "ADD"){
         ApplyFn = [](Word lhs, Word rhs){return lhs + rhs;};
-    }else if ( type == "SUBTRACT"){
+    }else if ( type == "SUB"){
         ApplyFn = [](Word lhs, Word rhs){return lhs - rhs;};
-    }else if ( type == "MULTIPLY"){
+    }else if ( type == "MUL"){
         ApplyFn = [](Word lhs, Word rhs){return lhs * rhs;};
-    }else if ( type == "DIVIDE"){
+    }else if ( type == "DIV"){
         ApplyFn = [](Word lhs, Word rhs){return lhs / rhs;};
     }else if ( type == "LESSTHAN"){
         ApplyFn = [](Word lhs, Word rhs){return lhs < rhs ? (Word)1:(Word)0;};
@@ -71,7 +71,7 @@ void Operation::decode(std::string type) {
     }else if ( type == "LOAD"){
         ApplyFn = [](Word lhs, Word rhs){return  * ((Word*)lhs+ rhs);};
     }else if ( type == "STORE"){
-        ApplyFn = [](Word lhs, Word rhs){*(Word*)lhs  = rhs; return (Word)0;};
+        ApplyFn = [](Word lhs, Word rhs){*(Word*)lhs  = rhs; return rhs;};
     }
     
     //else if ( type == "SELECT"){
@@ -90,6 +90,8 @@ int Operation::execute(CbIdx cbidx) {
     //TODO: use cbid
     // Operands& ops = operands[idx];
     // assert(operands.ready());
+
+
 
     if(!operands[cbidx].ready())
         return 1;

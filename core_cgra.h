@@ -35,7 +35,7 @@ public:
     void loadBitstream(Config& bitstream);
     // void loadInputs(std::string inputFilename);
     void loadInputs(Word * input);
-    void loadInputs(Config& inputConfig);
+    void loadInputMap(Config& inputConfig);
 
     // The CGRA model does timing and functional modeling, so this
     // simulate() does essentially nothing after a callback is

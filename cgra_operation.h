@@ -53,9 +53,11 @@ public:
     };
     
     struct Operands {
+        bool trigger;
         Operand predicate, fallback, lhs, rhs;
 
         Operands(){
+            trigger = true;
             predicate.ready = true;
             fallback.ready = true;
         }
@@ -70,9 +72,12 @@ public:
                 rhs.ready = true;
                 rhs.immediate = true;
             }
+            if (bitstream.exists(prefix+".trigger")){
+                trigger = (bool)bitstream.get<int32_t>(prefix+".trigger");
+            }
         }
         inline bool ready() const {
-            return predicate.ready && fallback.ready && lhs.ready && rhs.ready;
+            return trigger && predicate.ready && fallback.ready && lhs.ready && rhs.ready;
         }
     };
     struct Output {
