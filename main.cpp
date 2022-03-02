@@ -24,7 +24,7 @@ int main(){
     Word inputs2[4] = {(Word)&data[1],(Word)data,(Word)deltas,(Word)bases};
 
     cgra::CGRACore core(8,8,8);
-    core.loadBitstream("wunderpus-decompress.cfg");
+    core.loadBitstream("wunderpus-decompress.cfg"); //TODO: also take in dynamically determined arguments like deltas and bases instead of making them part of inputs.
     core.loadInputs(inputs1);
     core.loadInputs(inputs2);
     core.execute();

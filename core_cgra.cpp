@@ -70,7 +70,12 @@ void CGRACore::loadInputMap(Config& inputConfig){
 
 }
 
+//TODO: change name to launch new thread return thread id
 void CGRACore::loadInputs(Word * input){
+
+    //TODO:  check size of input vector
+
+    //TODO: make readable j->destination
     for (unsigned int i=0; i<inputMap.size(); i++){
         for (unsigned int j=0; j<inputMap[i].size(); j++){
             if(inputMap[i][j].pos == 0_posid){
@@ -83,6 +88,7 @@ void CGRACore::loadInputs(Word * input){
         }
     }
 
+    //TODO: should be done in the operand class
     //initial check for what's ready
     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
         for (OpIdx o = 0_opid; o < processingElements[p].operations.size(); o++) {
@@ -132,15 +138,16 @@ void CGRACore::loadInputs(Word * input){
 // }
 
 // TODO: Re-write to call tick().
+// TODO: Separate out routing and execution as separate tasks in the queue
 void CGRACore::tick() {
     while(!pq.empty() && pq.top().timestamp <= now) {
-        TimeSpace x = pq.top();
+        TimeSpace x = pq.top(); //TODO : anything but x
         pq.pop();
 
         // TODO: All of this should be in ProcessingElement::execute
         Operation &op = processingElements[x.pe].operations[x.op];
         op.execute(x.cb);
-        std::cout<<"thread"<<x.cb<<", pe"<<x.pe<<", op"<<x.op<<" : "<<op.output.value<<"\n";
+        std::cout<<now<<" "<<"thread"<<x.cb<<", pe"<<x.pe<<", op"<<x.op<<" : "<<op.output.value<<"\n";
         // if (op.output.ready) {
             for (uint32_t i = 0; i < op.dest.size(); i++) {
                 // shouldn't the dest just be a Operand* ???
@@ -151,7 +158,7 @@ void CGRACore::tick() {
                 } else if(op.dest[i].pos == 1_posid) {
                     dest.operands[x.cb].rhs.set(op.output.value);
                 }
-                else if(op.dest[i].pos == 1_posid){
+                else if(op.dest[i].pos == 2_posid){
                     dest.operands[x.cb].trigger = (bool) op.output.value;
                 }
                 
@@ -165,6 +172,7 @@ void CGRACore::tick() {
     }
 }
 
+//TODO: take time for how long to input for
 void CGRACore::execute(){
 
     while (!pq.empty()) {
