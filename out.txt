@@ -1,0 +1,6 @@
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+g++ -o engine_cgra.o -c -std=c++17 -Wall -Wextra -Werror -O0 -gdwarf-3 engine_cgra.cpp
+g++ -o main.o -c -std=c++17 -Wall -Wextra -Werror -O0 -gdwarf-3 main.cpp
+scons: building terminated because of errors.
