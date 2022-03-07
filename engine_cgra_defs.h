@@ -4,7 +4,7 @@
 #include <array> 
 #include <queue>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <stdint.h>
 #include "strong_int.h"
 #include "strong_vec.h"
@@ -12,7 +12,7 @@
 #include <assert.h>
 #include "qassert.h"
 
-#include "engine_cgra_event.h"
+// #include "engine_cgra_event.h"
 // #include "engine_cgra_pe.h"
 // #include "engine_cgra_ts.h"
 // #include "engine_cgra_im.h"
@@ -66,8 +66,8 @@ uint32_t executionDelay = 1;
 uint32_t setTokenDelay = 2;
 uint32_t setTokenFailDelay = 1;
 
-
-std::priority_queue<CgraEvent> pq;
+// TODO (nikhil) : Return here;
+// Move this inside cgra
 
 
 struct Location {

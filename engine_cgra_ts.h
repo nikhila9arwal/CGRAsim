@@ -27,7 +27,7 @@ public:
     };
     struct TokenStoreEntry {
         TokenStoreEntry(Token tok)
-            : tag(tok.tag), lhsValid(false), rhsValid(false), predicateValid(false) {
+            : lhsValid(false), rhsValid(false), predicateValid(false), tag(tok.tag) {
             setToken(tok);
         }
         void setToken(Token tok);
@@ -50,7 +50,7 @@ public:
     TokenStoreEntry* getTokenStoreEntry(Tag tag);
 
 private:
-    std::unordered_map<Tag, TokenStoreEntry> tokenStore;
+    std::map<Tag, TokenStoreEntry> tokenStore;
     uint32_t size;
 };
 

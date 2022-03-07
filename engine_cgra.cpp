@@ -18,7 +18,7 @@ CgraEngine::CgraEngine(
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
-            ProcessingElement(_numInsts * _numThrds, _numInsts, p));
+            ProcessingElement(_numInsts * _numThrds, _numInsts, p, this));
     }
     network = new BusNetwork(this);
 }
@@ -49,7 +49,7 @@ void CgraEngine::execute(uint64_t* const args){//std::shared_ptr<TaskReq> req) {
     loadRuntimeInputs(runtimeInputs);
     cbidx = cbidx + 1_cbid;
     while (!pq.empty()) {
-        currentTime = pq.top().timestamp;
+        currentTime = pq.top()->timestamp;
         tick();
     }
 }
@@ -111,8 +111,8 @@ void CgraEngine::loadRuntimeInputs(Word* inputs) {
             // TODO (nikhil) : should be part of the network since we are loading inputs
             // over and over for every thread.
             TokenStore::Token tok(destination.pos, *inputs, destination.inst, cbidx);
-            SendTokenCgraEvent event(currentTime, destination.pe, tok);
-            pq.push(event);
+            CgraEvent*  event = new SendTokenCgraEvent(currentTime, destination.pe, tok);
+            pushToCgraQueue(event);
         }
         inputs++;
     }
@@ -125,9 +125,9 @@ void CgraEngine::loadRuntimeInputs(Word* inputs) {
 // TODO (nikhil): Re-write to call tick().
 // TODO (nikhil): Separate out routing and execution as separate events in the queue
 void CgraEngine::tick() {
-    while (!pq.empty() && pq.top().timestamp <= currentTime) {
-        CgraEvent& readyEvent = pq.top();
-        readyEvent.go(this);
+    while (!pq.empty() && pq.top()->timestamp <= currentTime) {
+        CgraEvent* readyEvent = pq.top();
+        readyEvent->go(this);
         pq.pop();
     }
 }

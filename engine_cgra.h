@@ -26,7 +26,7 @@ public:
     // BaseCache* getL1d() { return l1d; }
     // void configure(const FunctionConfiguration& functionConf);
     void configure(std::string filename, void* context);
-    void unconfigure(void* funcPtr) {}
+    // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
     void execute(uint64_t* const args);
     void sendToken(PeIdx pe, TokenStore::Token tok) { network->sendToken(pe, tok); }
@@ -36,10 +36,14 @@ public:
     void executeInstruction(PeIdx pe, TokenStore::Tag tag) {
         processingElements[pe].executeInstruction(tag);
     }
+    void pushToCgraQueue(CgraEvent* event){
+        pq.push(event);
+    }
 
 private:
     // BaseCache* l1i;
     // BaseCache* l1d;
+    std::priority_queue<CgraEvent*> pq;
     CbIdx cbidx;
     BusNetwork* network;
     StrongVec<PeIdx, ProcessingElement> processingElements;

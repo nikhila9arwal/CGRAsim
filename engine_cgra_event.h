@@ -9,7 +9,7 @@ namespace platy {
 namespace sim {
 namespace ms {
 
-
+class CgraEngine;
 class CgraEvent {
 public:
     CgraEvent(uint32_t _timestamp) : timestamp(_timestamp) {}
@@ -19,7 +19,7 @@ public:
         return timestamp > other.timestamp;
     }
 
-    virtual void go(CgraEngine* cgra) = 0;
+    virtual void go(CgraEngine* cgra) const = 0;
     uint32_t timestamp;
 };
 
@@ -30,7 +30,7 @@ public:
         : CgraEvent(_timestamp), pe(_pe), tag(_instrId, _cb) {}
     ExecuteCgraEvent(uint32_t _timestamp, PeIdx _pe, TokenStore::Tag _tag)
         : CgraEvent(_timestamp), pe(_pe), tag(_tag) {}
-    void go(CgraEngine* cgra) { cgra->executeInstruction(pe, tag); }
+    void go(CgraEngine* cgra) const { cgra->executeInstruction(pe, tag); }
 
 private:
     PeIdx pe;
@@ -41,7 +41,7 @@ class SendTokenCgraEvent : public CgraEvent {
 public:
     SendTokenCgraEvent(uint32_t _timestamp, PeIdx _pe, TokenStore::Token _tok)
         : CgraEvent(_timestamp), pe(_pe), tok(_tok) {}
-    void go(CgraEngine* cgra) { cgra->sendToken(pe, tok); }
+    void go(CgraEngine* cgra) const { cgra->sendToken(pe, tok); }
 
 private:
     PeIdx pe;

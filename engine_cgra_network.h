@@ -12,7 +12,7 @@ class Network {
 public:
     Network(CgraEngine* _cgra) : cgra(_cgra) {}
     // TODO (nikhil): make this templated
-    virtual bool sendToken(PeIdx pe, TokenStore::Token tok) = 0;
+    virtual void sendToken(PeIdx pe, TokenStore::Token tok) = 0;
 
 protected:
     CgraEngine* cgra;
@@ -21,11 +21,11 @@ protected:
 class BusNetwork : public Network {
 public:
     BusNetwork(CgraEngine* _cgra) : Network(_cgra) {}
-    bool sendToken(PeIdx pe, TokenStore::Token tok) {
+    void sendToken(PeIdx pe, TokenStore::Token tok) {
         if (!cgra->setToken(pe, tok)) {
             uint32_t newEventTime = currentTime + networkDelay + setTokenFailDelay;
-            SendTokenCgraEvent event(newEventTime, pe, tok);
-            pq.push(event);
+            CgraEvent* event =  new SendTokenCgraEvent(newEventTime, pe, tok);
+            cgra->pushToCgraQueue(event);
         }
     }
 };

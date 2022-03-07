@@ -14,8 +14,8 @@ bool ProcessingElement::setToken(TokenStore::Token tok) {
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
     if (isInstructionReady(tokenStoreEntry, instruction)) {
         uint32_t newEventTime = (currentTime + networkDelay + setTokenDelay);
-        ExecuteCgraEvent event(newEventTime, selfIdx, tok.tag.instIdx, tok.tag.cbid);
-        pq.push(event);
+        CgraEvent* event = new ExecuteCgraEvent(newEventTime, selfIdx, tok.tag.instIdx, tok.tag.cbid);
+        cgra->pushToCgraQueue(event);
     }
     return true;
 }
@@ -43,16 +43,17 @@ void ProcessingElement::executeInstruction(TokenStore::Tag tag) {
     std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tag.instIdx<<", "<<currentTime<<"\n";
     for (auto loc : instruction->dest) {
         TokenStore::Token tok(loc.pos, output, loc.inst, tag.cbid);
-        SendTokenCgraEvent event(currentTime + executionDelay, loc.pe, tok);
-        pq.push(event);
+        CgraEvent*  event =  new SendTokenCgraEvent(currentTime + executionDelay, loc.pe, tok);
+        cgra->pushToCgraQueue(event);
+
     }
 }
 
 void ProcessingElement::pushFullyImmediateInstructions(CbIdx cbid) {
     for (InstrMemIdx i = 0_instid; i < instructionMemory.size(); i++) {
         if (instructionMemory.getInstruction(i)->isFullyImmediate()) {
-            ExecuteCgraEvent event(currentTime, selfIdx, i, cbid);
-            pq.push(event);
+            CgraEvent* event = new ExecuteCgraEvent(currentTime, selfIdx, i, cbid);
+            cgra->pushToCgraQueue(event);
         }
     }
 }

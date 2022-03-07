@@ -13,10 +13,12 @@ namespace ms {
 class ProcessingElement {
 public:
     ProcessingElement(
-        uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx)
-        : tokenStore(tokenStoreSize),
-          instructionMemory(instructionMemSize),
-          selfIdx(_selfIdx) {}
+        uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, CgraEngine* _cgra)
+        :   cgra(_cgra),
+            selfIdx(_selfIdx),
+            tokenStore(tokenStoreSize),
+            instructionMemory(instructionMemSize)
+           {}
 
     bool setToken(TokenStore::Token tok);
 
@@ -35,6 +37,7 @@ public:
     void pushFullyImmediateInstructions(CbIdx cbid);
 
 private:
+    CgraEngine* cgra;
     PeIdx selfIdx;
     TokenStore tokenStore;
     InstructionMemory instructionMemory;
