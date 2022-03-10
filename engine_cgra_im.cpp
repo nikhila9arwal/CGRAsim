@@ -71,6 +71,7 @@ void InstructionMemory::Instruction::decode(std::string type) {
             // Word readVal;
             // readFromApp<Word>(1_pid, (void*)((Word*)lhs + rhs), readVal);
             // return readVal;
+            lhs++; //unused param
             return rhs;
         };
     } else if (type == "STORE") {  // TODO (nikhil): load using simulator method
@@ -82,6 +83,7 @@ void InstructionMemory::Instruction::decode(std::string type) {
         applyFn = [](Word lhs, Word rhs) {
             // Word readVal;
             // writeToApp<Word>(1_pid, (void*)((Word*)lhs), rhs);
+            lhs++;// unused param
             return rhs;
         };
     }
@@ -102,14 +104,14 @@ void InstructionMemory::Instruction::setStaticParam(Location& loc, Word param) {
     if (loc.pos == PosIdx::LHS) {
         isLhsImm = true;
         lhsImm = param;
-    } else if (loc.pos == loc.pos == PosIdx::RHS) {
+    } else if (loc.pos == PosIdx::RHS) {
         isRhsImm = true;
         rhsImm = param;
     }
 }
 
 InstructionMemory::InstructionMemory(uint32_t size) {
-    for (int i = 0; i < size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         instructionMemory.push_back(Instruction());
     }
 }

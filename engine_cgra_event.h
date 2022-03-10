@@ -2,7 +2,6 @@
 #pragma once
 
 #include "engine_cgra_defs.h"
-#include "engine_cgra.h"
 #include "engine_cgra_ts.h"
 
 namespace platy {
@@ -30,7 +29,7 @@ public:
         : CgraEvent(_timestamp), pe(_pe), tag(_instrId, _cb) {}
     ExecuteCgraEvent(uint32_t _timestamp, PeIdx _pe, TokenStore::Tag _tag)
         : CgraEvent(_timestamp), pe(_pe), tag(_tag) {}
-    void go(CgraEngine* cgra) const { cgra->executeInstruction(pe, tag); }
+    void go(CgraEngine* cgra) const;
 
 private:
     PeIdx pe;
@@ -41,7 +40,7 @@ class SendTokenCgraEvent : public CgraEvent {
 public:
     SendTokenCgraEvent(uint32_t _timestamp, PeIdx _pe, TokenStore::Token _tok)
         : CgraEvent(_timestamp), pe(_pe), tok(_tok) {}
-    void go(CgraEngine* cgra) const { cgra->sendToken(pe, tok); }
+    void go(CgraEngine* cgra) const;
 
 private:
     PeIdx pe;

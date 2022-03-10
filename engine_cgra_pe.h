@@ -5,6 +5,7 @@
 #include "engine_cgra_im.h"
 #include "engine_cgra_ts.h"
 #include "engine_cgra_event.h"
+#include "engine_cgra.h"
 
 namespace platy {
 namespace sim {

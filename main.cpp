@@ -13,6 +13,10 @@
 //     return 0;
 // }
 
+namespace platy {
+namespace sim {
+namespace ms {
+
 int main(){
     
     // Config conf("wunderpus-decompress.cfg");
@@ -35,11 +39,13 @@ int main(){
     // std::cout<<data[1]<<"\n";
     // return 0;
 
-    Config conf("outdataflow_copy.cfg");
     CgraEngine cgra(4,4,4);
     cgra.configure("outdataflow_copy.cfg", NULL);
     uint64_t args[3] = {1,2,3};
     cgra.execute(args);
+    return 0;
 }
-    
+
+}
+}
 }

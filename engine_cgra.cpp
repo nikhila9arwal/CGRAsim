@@ -1,5 +1,8 @@
 
 #include "engine_cgra.h"
+#include "engine_cgra_network.h"
+#include "engine_cgra_pe.h"
+
 
 namespace platy {
 namespace sim {
@@ -21,6 +24,20 @@ CgraEngine::CgraEngine(
             ProcessingElement(_numInsts * _numThrds, _numInsts, p, this));
     }
     network = new BusNetwork(this);
+}
+
+bool CgraEngine::setToken(PeIdx pe, TokenStore::Token tok) {
+    return processingElements[pe].setToken(tok);
+}
+
+void CgraEngine::sendToken(PeIdx pe, TokenStore::Token tok) { network->sendToken(pe, tok); }
+
+void CgraEngine::executeInstruction(PeIdx pe, TokenStore::Tag tag) {
+    processingElements[pe].executeInstruction(tag);
+}
+
+void CgraEngine::pushToCgraQueue(CgraEvent* event){
+    pq.push(event);
 }
 
 // TODO (nikhil): Change wunderpus decompression cfg to have params
@@ -111,8 +128,9 @@ void CgraEngine::loadRuntimeInputs(Word* inputs) {
             // TODO (nikhil) : should be part of the network since we are loading inputs
             // over and over for every thread.
             TokenStore::Token tok(destination.pos, *inputs, destination.inst, cbidx);
-            CgraEvent*  event = new SendTokenCgraEvent(currentTime, destination.pe, tok);
-            pushToCgraQueue(event);
+            // CgraEvent*  event = new SendTokenCgraEvent(currentTime, destination.pe, tok);
+            // pushToCgraQueue(event);
+            sendToken(destination.pe, tok);
         }
         inputs++;
     }

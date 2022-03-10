@@ -17,6 +17,10 @@ public:
         bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
             return instIdx == other.instIdx && cbid == other.cbid;
         }
+        //TODO(nikhil): Ask beckmann what to do about this
+        bool operator<(const struct Tag& other) const {  // <  ==> > for min heap
+            return int32_t(instIdx) + int32_t(cbid) < int32_t(other.instIdx) + int32_t(other.cbid);
+        }
     };
     struct Token {
         Token(PosIdx _posid, Word _value, InstrMemIdx _inst, CbIdx _cbid)

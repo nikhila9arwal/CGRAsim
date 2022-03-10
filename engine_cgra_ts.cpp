@@ -29,8 +29,11 @@ TokenStore::TokenStoreEntry* TokenStore::setToken(Token tok) {
         return entry;
     }
     if (isNotFull()) {
-        tokenStore[tok.tag] = TokenStoreEntry(tok);
-        return &tokenStore[tok.tag];
+        std::pair<Tag,TokenStoreEntry> toInsert(tok.tag, tok);
+        // tokenStore[tok.tag] = TokenStoreEntry(tok);
+        // return &tokenStore[tok.tag];
+        tokenStore.insert(toInsert);
+        return & tokenStore.at(tok.tag);
     }
     return nullptr;
 }
@@ -40,7 +43,8 @@ TokenStore::TokenStoreEntry* TokenStore::getTokenStoreEntry(Tag tag) {
     if (entry == tokenStore.end()) {
         return nullptr;
     }
-    return &entry->second;
+    // return &tokenStore[tag];
+    return & tokenStore.at(tag);
 }
 
 }

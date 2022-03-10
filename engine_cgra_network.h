@@ -21,13 +21,7 @@ protected:
 class BusNetwork : public Network {
 public:
     BusNetwork(CgraEngine* _cgra) : Network(_cgra) {}
-    void sendToken(PeIdx pe, TokenStore::Token tok) {
-        if (!cgra->setToken(pe, tok)) {
-            uint32_t newEventTime = currentTime + networkDelay + setTokenFailDelay;
-            CgraEvent* event =  new SendTokenCgraEvent(newEventTime, pe, tok);
-            cgra->pushToCgraQueue(event);
-        }
-    }
+    void sendToken(PeIdx pe, TokenStore::Token tok);
 };
 
 }

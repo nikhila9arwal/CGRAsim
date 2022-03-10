@@ -3,14 +3,16 @@
 
 // #include "../engine.h"
 #include "engine_cgra_defs.h"
-#include "engine_cgra_pe.h"
 #include "engine_cgra_ts.h"
-#include "engine_cgra_network.h"
 #include "engine_cgra_event.h"
 
 namespace platy {
 namespace sim {
 namespace ms {
+
+class BusNetwork;
+class ProcessingElement;
+
 
 class CgraEngine {//: public Engine {
 public:
@@ -29,16 +31,10 @@ public:
     // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
     void execute(uint64_t* const args);
-    void sendToken(PeIdx pe, TokenStore::Token tok) { network->sendToken(pe, tok); }
-    bool setToken(PeIdx pe, TokenStore::Token tok) {
-        return processingElements[pe].setToken(tok);
-    }
-    void executeInstruction(PeIdx pe, TokenStore::Tag tag) {
-        processingElements[pe].executeInstruction(tag);
-    }
-    void pushToCgraQueue(CgraEvent* event){
-        pq.push(event);
-    }
+    void sendToken(PeIdx pe, TokenStore::Token tok);
+    bool setToken(PeIdx pe, TokenStore::Token tok);
+    void executeInstruction(PeIdx pe, TokenStore::Tag tag);
+    void pushToCgraQueue(CgraEvent* event);
 
 private:
     // BaseCache* l1i;
