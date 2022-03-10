@@ -21,19 +21,19 @@ CgraEngine::CgraEngine(
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
-            ProcessingElement(_numInsts * _numThrds, _numInsts, p, this));
+            new ProcessingElement{_numInsts * _numThrds, _numInsts, p, this});
     }
     network = new BusNetwork(this);
 }
 
 bool CgraEngine::setToken(PeIdx pe, TokenStore::Token tok) {
-    return processingElements[pe].setToken(tok);
+    return processingElements[pe]->setToken(tok);
 }
 
 void CgraEngine::sendToken(PeIdx pe, TokenStore::Token tok) { network->sendToken(pe, tok); }
 
 void CgraEngine::executeInstruction(PeIdx pe, TokenStore::Tag tag) {
-    processingElements[pe].executeInstruction(tag);
+    processingElements[pe]->executeInstruction(tag);
 }
 
 void CgraEngine::pushToCgraQueue(CgraEvent* event){
@@ -58,7 +58,7 @@ void CgraEngine::execute(uint64_t* const args){//std::shared_ptr<TaskReq> req) {
 
     // initial check for what's ready because of immediates
     for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
-        processingElements[p].pushFullyImmediateInstructions(cbidx);
+        processingElements[p]->pushFullyImmediateInstructions(cbidx);
     }
 
     // Word* runtimeInputs = (Word*)req->args;
@@ -78,7 +78,7 @@ void CgraEngine::loadBitstream(Config& bitstream) {
             break;
         }
         qassert(i < processingElements.size());
-        processingElements[i].loadBitstream(bitstream, configKey);
+        processingElements[i]->loadBitstream(bitstream, configKey);
     }
 }
 
@@ -96,7 +96,7 @@ void CgraEngine::loadStaticParams(Config& bitstream, void* context) {
         for (int j = 0;; j++) {
             std::string paramDestKey = paramKey + qformat(".dest_{}", j);
             auto loc = Location(bitstream, paramDestKey);
-            processingElements[loc.pe].setStaticParam(loc, param);
+            processingElements[loc.pe]->setStaticParam(loc, param);
         }
     }
 }

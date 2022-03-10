@@ -42,7 +42,7 @@ private:
     std::priority_queue<CgraEvent*> pq;
     CbIdx cbidx;
     BusNetwork* network;
-    StrongVec<PeIdx, ProcessingElement> processingElements;
+    StrongVec<PeIdx, ProcessingElement*> processingElements;
     std::vector<std::vector<Location>> inputDestinationMap;
 
     void loadBitstream(Config& bitstream);
