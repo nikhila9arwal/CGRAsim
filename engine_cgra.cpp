@@ -8,14 +8,15 @@ namespace platy {
 namespace sim {
 namespace ms {
 
-
+//TODO (nikhil): cgra namespace platy->sim->cgra
+//TODO (nikhil): Change name to Cgra. CgraEngine would contain a cgra object
 
 CgraEngine::CgraEngine(
     // const std::string& name,
     // TileIdx tile,
     // EngineIdx _engIdx,
     uint32_t _numPes,
-    uint32_t _numInsts,
+    uint32_t _numInsts, //TODO (nikhil): change to numInstrsPerPE
     uint32_t _numThrds)
     {//: Engine(name, tile, _engIdx) {
     cbidx = 0_cbid;
@@ -26,6 +27,7 @@ CgraEngine::CgraEngine(
     network = new BusNetwork(this);
 }
 
+//TODO (nikhil): acceptToken
 bool CgraEngine::setToken(PeIdx pe, TokenStore::Token tok) {
     return processingElements[pe]->setToken(tok);
 }

@@ -30,11 +30,19 @@ public:
     void configure(std::string filename, void* context);
     // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
+
+    //TODO (nikhil): pull out taskreq. Engine needs to know which function to execute or route inputs to
     void execute(uint64_t* const args);
-    void sendToken(PeIdx pe, TokenStore::Token tok);
-    bool setToken(PeIdx pe, TokenStore::Token tok);
-    void executeInstruction(PeIdx pe, TokenStore::Tag tag);
-    void pushToCgraQueue(CgraEvent* event);
+    // TODO (nikhil): use getProcessingElement instead;
+    
+    void pushEvent(CgraEvent* event);
+
+    ProcessingElement* getProcessingElement(PeIdx peid) {
+        return &processingElements.at(peid);
+    }
+    const ProcessingElement* getProcessingElement(PeIdx peid) const {
+        return const_cast<CgraEngine*>(this)->getProcessingElement(peid);     
+    }
 
 private:
     // BaseCache* l1i;

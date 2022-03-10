@@ -10,6 +10,7 @@ namespace ms {
 class InstructionMemory {
 public:
     struct Instruction {
+        ~Instruction() {}
         bool isPredicated;
         bool isLhsImm;
         bool isRhsImm;
@@ -25,6 +26,7 @@ public:
     };
 
     InstructionMemory(uint32_t size);
+    ~InstructionMemory() {}
     void setStaticParam(Location& loc, Word param) {
         instructionMemory[loc.inst].setStaticParam(loc, param);
     }

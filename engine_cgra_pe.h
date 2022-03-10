@@ -21,10 +21,9 @@ public:
             instructionMemory(instructionMemSize)
            {}
 
+    ~ProcessingElement() {}
+    //TODO(nikhil): setToken=>accepttoken
     bool setToken(TokenStore::Token tok);
-
-    // TODO (nikhil): 2 masks what's ready (from tokenStore) and what's missing (from
-    // instrMem)
 
     bool isInstructionReady(
         TokenStore::TokenStoreEntry* tsEntry, InstructionMemory::Instruction* inst);
@@ -35,7 +34,7 @@ public:
     void loadBitstream(Config& bitstream, std::string key) {
         instructionMemory.loadBitstream(bitstream, key);
     }
-    void pushFullyImmediateInstructions(CbIdx cbid);
+    // void pushFullyImmediateInstructions(CbIdx cbid);
 
 private:
     CgraEngine* cgra;

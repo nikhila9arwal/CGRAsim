@@ -12,6 +12,7 @@ class TokenStore {
 public:
     struct Tag {
         Tag(InstrMemIdx _instIdx, CbIdx _cbid) : instIdx(_instIdx), cbid(_cbid) {}
+        ~Tag() {}
         InstrMemIdx instIdx;
         CbIdx cbid;
         bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
@@ -25,6 +26,7 @@ public:
     struct Token {
         Token(PosIdx _posid, Word _value, InstrMemIdx _inst, CbIdx _cbid)
             : posid(_posid), value(_value), tag(_inst, _cbid) {}
+        ~Token () {}
         PosIdx posid;
         Word value;
         Tag tag;
@@ -34,6 +36,7 @@ public:
             : lhsValid(false), rhsValid(false), predicateValid(false), tag(tok.tag) {
             setToken(tok);
         }
+        ~TokenStoreEntry() {}
         void setToken(Token tok);
         // TODO (nikhil): change to generic val, pos type structure.
         Word lhs;
@@ -46,12 +49,15 @@ public:
     };
 
     TokenStore(uint32_t _size) : size(_size) { }
+    ~TokenStore() {}
 
-    TokenStoreEntry* setToken(Token tok);
+    // TODO (nikhil) : change to acceptToken
+    shared_ptr<TokenStoreEntry> setToken(Token tok);
 
+    // TODO (nikhil) : isNotFull ==> isEmpty
     inline bool isNotFull() { return tokenStore.size() <= size; }
 
-    TokenStoreEntry* getTokenStoreEntry(Tag tag);
+    shared_ptr<TokenStoreEntry> getTokenStoreEntry(Tag tag);
 
 private:
     std::map<Tag, TokenStoreEntry> tokenStore;

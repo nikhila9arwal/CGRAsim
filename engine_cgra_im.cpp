@@ -118,7 +118,6 @@ InstructionMemory::InstructionMemory(uint32_t size) {
 
 void InstructionMemory::loadBitstream(Config& bitstream, std::string key) {
     for (InstrMemIdx i = 0_instid;; i++) {
-        // TODO (nikhil): Change operation -> instruction
         std::string configKey = key + qformat(".inst_{}", i);
         if (bitstream.exists(configKey)) {
             qassert(i < instructionMemory.size());

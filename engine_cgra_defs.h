@@ -12,15 +12,6 @@
 #include <assert.h>
 #include "qassert.h"
 
-// #include "engine_cgra_event.h"
-// #include "engine_cgra_pe.h"
-// #include "engine_cgra_ts.h"
-// #include "engine_cgra_im.h"
-// #include "engine_cgra_network.h"
-// #include "engine_cgra_event.h"
-
-
-
 DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
 DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
@@ -56,8 +47,6 @@ typedef int64_t Word;  // TODO (nikhil): uint64_t maybe?
 // static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);
 // typedef std::array<Word, NUM_VALUE_ELEMENTS> Value;
 
-// TODO (nikhil) :  this becomes the CGRA class
-// CGRA method has methods to addEventToQueue
 // pass CGRA* to procElem so it can use these methods
 
 uint32_t currentTime = 0;
@@ -65,10 +54,6 @@ uint32_t networkDelay = 2;
 uint32_t executionDelay = 1;
 uint32_t setTokenDelay = 2;
 uint32_t setTokenFailDelay = 1;
-
-// TODO (nikhil) : Return here;
-// Move this inside cgra
-
 
 struct Location {
     PeIdx pe;
