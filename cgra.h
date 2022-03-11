@@ -1,38 +1,74 @@
+
 #pragma once
 
+// #include "../engine.h"
+#include "cgra_defs.h"
+#include "cgra_ts.h"
+#include "cgra_event.h"
 
-#include <array> 
-#include <stdint.h>
-#include "strong_int.h"
-#include "strong_vec.h"
-#include "config.h"
-#include <assert.h>
-#include "qassert.h"
+namespace platy {
+namespace sim {
+namespace cgra {
+
+class Network;
+class BusNetwork;
+class ProcessingElement;
 
 
-#define LINE_SIZE 64
-// namespace cgra{ 
+class Cgra {//: public Engine {
+public:
+    Cgra(
+        // const std::string& name,
+        // TileIdx tile,
+        // EngineIdx _engIdx,
+        uint32_t _numPes,
+        uint32_t _numInsts,
+        uint32_t _numThrds);
 
-DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
-DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
-DERIVE_STRONGER_INT(PosIdx, int32_t, posid)
-DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
+    // void setCaches(BaseCache* _l1i, BaseCache* _l1d) : l1i(_l1i), l1d(_l1d) {;}
+    // BaseCache* getL1d() { return l1d; }
+    // void configure(const FunctionConfiguration& functionConf);
+    void configure(std::string filename, void* context);
+    // void unconfigure(void* funcPtr) {}
+    // void execute(std::shared_ptr<TaskReq> req);
 
-typedef int64_t Word;
-static const size_t NUM_VALUE_ELEMENTS = LINE_SIZE / sizeof(Word);
-typedef std::array<Word, NUM_VALUE_ELEMENTS> Value;
+    //TODO (nikhil): pull out taskreq. Engine needs to know which function to execute or route inputs to
+    void execute(uint64_t* const args);
+    // TODO (nikhil): use getProcessingElement instead;
+    
+    void pushEvent(CgraEvent* event);
 
-// TODO: This is effectively a pointer to an Operand. Can be deleted.
-    struct Location {
-        PeIdx pe;
-        OpIdx op;
-        PosIdx pos; //0 for lhs, 1 for rhs, 2 for trigger
-        inline void loadBitstream(Config& bitstream, std::string prefix){
-            if (bitstream.exists(prefix)){
-                pe = (PeIdx)bitstream.get<int32_t>(prefix+".pe");
-                op = (OpIdx)bitstream.get<int32_t>(prefix+".op");
-                pos = (PosIdx)bitstream.get<int32_t>(prefix+".pos");
-            }
-        }
-    };
-// } // namespace cgra
+    ProcessingElement* getProcessingElement(PeIdx peid) {
+        return processingElements.at(peid);
+    }
+    const ProcessingElement* getProcessingElement(PeIdx peid) const {
+        return const_cast<Cgra*>(this)->getProcessingElement(peid);     
+    }
+
+    Network* getNetwork();
+
+    uint32_t currentTime;
+    uint32_t networkDelay;
+    uint32_t executionDelay;
+    uint32_t setTokenDelay;
+    uint32_t setTokenFailDelay;
+
+private:
+    // BaseCache* l1i;
+    // BaseCache* l1d;
+    std::priority_queue<CgraEvent*> pq;
+    CbIdx cbidx;
+    BusNetwork* network;
+    StrongVec<PeIdx, ProcessingElement*> processingElements;
+    std::vector<std::vector<Location>> inputDestinationMap;
+
+    void loadBitstream(Config& bitstream);
+    void loadStaticParams(Config& bitstream, void* context);
+    void loadInputMap(Config& bitstream);
+    void loadRuntimeInputs(Word* inputs);
+    void tick();
+};
+
+}  // namespace cgra
+}  // namespace sim
+}  // namespace platy

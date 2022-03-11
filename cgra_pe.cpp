@@ -1,25 +1,70 @@
+
 #include "cgra_pe.h"
 
+
+namespace platy {
+namespace sim {
 namespace cgra {
 
-ProcessingElement::ProcessingElement(PeIdx numPes, OpIdx numOps, CbIdx numThrds){
-    for(OpIdx i=0_opid; i<numOps; i++) {
-        // operations.emplace_back(Operation{});
-        operations.push_back(Operation(numPes,numOps,numThrds));
+bool ProcessingElement::acceptToken(TokenStore::Token tok) {
+    auto tokenStoreEntry = tokenStore.acceptToken(tok);
+    if (tokenStoreEntry == nullptr) {
+        return false;
     }
-}
-
-void ProcessingElement::loadBitstream(Config& bitstream, std::string prefix) {
-    for (OpIdx i=0_opid; ; i++){
-        std::string s = prefix + qformat(".operation_{}",i);
-        if (bitstream.exists(s)) {
-            assert(i<operations.size());
-            operations[i].loadBitstream(bitstream,s);
-        } else {
-            break;
+    // do a ready check
+    auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
+    if (isInstructionReady(tokenStoreEntry, instruction)) {
+        //TODO: set and send would be different events. Send would be handled by network.
+        //Network delay would only be known by the network
+        if(!instruction->isPredicated || tokenStoreEntry->predicate){
+            uint32_t newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
+            CgraEvent* event = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
+            cgra->pushEvent(event);
         }
+        tokenStore.removeEntry(tok.tag);
+    }
+    return true;
+}
+
+bool ProcessingElement::isInstructionReady(
+    std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry, InstructionMemory::Instruction* inst) {
+    if (inst->isPredicated && !tsEntry->predicateValid) {
+        return false;
+    }
+    if (!inst->isLhsImm && !tsEntry->lhsValid) {
+        return false;
+    }
+    if (!inst->isRhsImm && !tsEntry->rhsValid) {
+        return false;
+    }
+    return true;
+}
+
+void ProcessingElement::executeInstruction(std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry) {
+    // auto tsEntry = tokenStore.getTokenStoreEntry(tag);
+    auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
+    Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
+    Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
+    Word output = instruction->applyFn(lhs, rhs);
+    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime<<"\n";
+
+    //TODO (nikhil): List of destinations should be sent out along with the output
+    for (auto loc : instruction->dest) {
+        TokenStore::Token tok(loc.pos, output, loc.inst, tsEntry->tag.cbid);
+        CgraEvent*  event =  new SendTokenCgraEvent(cgra->currentTime + cgra->executionDelay, loc.pe, tok);
+        cgra->pushEvent(event);
     }
 }
-    
 
-} // namespace cgra
+// void ProcessingElement::pushFullyImmediateInstructions(CbIdx cbid) {
+//     for (InstrMemIdx i = 0_instid; i < instructionMemory.size(); i++) {
+//         if (instructionMemory.getInstruction(i)->isFullyImmediate()) {
+//             CgraEvent* event = new ExecuteCgraEvent(currentTime, selfIdx, i, cbid);
+//             cgra->pushEvent(event);
+//         }
+//     }
+// }
+
+}
+}
+}
