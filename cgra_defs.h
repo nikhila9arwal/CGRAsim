@@ -54,17 +54,13 @@ struct Location {
     PeIdx pe;
     InstrMemIdx inst;
     PosIdx pos;  // TODO (nikhil): Use enum here -- 0 for lhs, 1 for rhs, 2 for predicate
-    Location(PeIdx _pe, InstrMemIdx _inst, PosIdx _pos)
-        : pe(_pe), inst(_inst), pos(_pos) {}
-    Location(Config& bitstream, std::string key) { loadBitstream(bitstream, key); }
-    inline void loadBitstream(Config& bitstream, std::string key) {
-        qassert(bitstream.exists(key));
-        pe = (PeIdx)bitstream.get<int32_t>(key + ".pe");
-        inst = (InstrMemIdx)bitstream.get<int32_t>(key + ".inst");
-        pos = (PosIdx)bitstream.get<int32_t>(key + ".pos");
-    }
+
+    // TODO (nzb): Move implementation to cpp?
+    Location(PeIdx _pe, InstrMemIdx _inst, PosIdx _pos);
+    Location(Config& bitstream, std::string key);
+    inline void loadBitstream(Config& bitstream, std::string key);
 };
 
-}
-}
-}
+} // namespace cgra
+} // namespace sim
+} // namespace platy

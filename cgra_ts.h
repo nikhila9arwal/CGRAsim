@@ -7,7 +7,6 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
-
 class TokenStore {
 public:
     struct Tag {
@@ -22,6 +21,7 @@ public:
             return int32_t(instIdx) + int32_t(cbid) < int32_t(other.instIdx) + int32_t(other.cbid);
         }
     };
+    
     struct Token {
         Token(PosIdx _posid, Word _value, InstrMemIdx _inst, CbIdx _cbid)
             : posid(_posid), value(_value), tag(_inst, _cbid) {}
@@ -30,12 +30,13 @@ public:
         Word value;
         Tag tag;
     };
-    struct TokenStoreEntry {
-        TokenStoreEntry(Token tok)
+    
+    struct Entry {
+        Entry(Token tok)
             : lhsValid(false), rhsValid(false), predicateValid(false), tag(tok.tag) {
             setToken(tok);
         }
-        ~TokenStoreEntry() {}
+        ~Entry() {}
         void setToken(Token tok);
         // TODO (nikhil): change to generic val, pos type structure.
         Word lhs;
@@ -46,20 +47,46 @@ public:
         bool predicateValid;
         Tag tag;
     };
+    typedef std::shared_ptr<Entry> EntryPtr;
 
-    TokenStore(uint32_t _size) : size(_size) { }
+    TokenStore(uint32_t _capacity) : capacity(_capacity) { }
     ~TokenStore() {}
 
-    std::shared_ptr<TokenStoreEntry> acceptToken(Token tok);
-    inline bool isEmpty() { return tokenStore.size() <= size; }
-    std::shared_ptr<TokenStoreEntry> getTokenStoreEntry(Tag tag);
-    void removeEntry(Tag tag){
-        tokenStore.erase(tag);
-    }
+    /**
+     * @brief Push a new token into the TokenStore. Can fail if there
+     * is not enough space.
+     *
+     * @param tok Incoming token.
+     *
+     * @return A pointer to the token store entry if the token is
+     * accepted. Null if the token cannot be accepted.
+     */
+    EntryPtr acceptToken(Token tok);
+
+    /**
+     * @brief Returns the entry, if present, or null otherwise.
+     *
+     * @param tag The tag to look up.
+     *
+     * @return A pointer to the token store entry if found, null
+     * otherwise.
+     */
+    EntryPtr at(Tag tag);
+
+    /**
+     * @brief Delete a token from the store. Asserts that the
+     * requested tag is valid.
+     *
+     * @param tag The tag to delete.
+     */
+    void erase(Tag tag);
+
+    inline bool isEmpty() { return tokenStore.empty(); }
+    inline bool isFull() { return tokenStore.size() == capacity; }
 
 private:
-    std::map<Tag, TokenStoreEntry> tokenStore;
-    uint32_t size;
+    std::map<Tag, EntryPtr> tokenStore;
+    uint32_t capacity;
 };
 
 }

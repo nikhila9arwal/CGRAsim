@@ -25,13 +25,13 @@ public:
 
 class ExecuteCgraEvent : public CgraEvent {
 public:
-    ExecuteCgraEvent(uint32_t _timestamp, PeIdx _peid, std::shared_ptr<TokenStore::TokenStoreEntry> _tsEntry)
+    ExecuteCgraEvent(uint32_t _timestamp, PeIdx _peid, TokenStore::EntryPtr _tsEntry)
         : CgraEvent(_timestamp), peid(_peid), tsEntry(_tsEntry) {}
     void go(Cgra* cgra) const;
 
 private:
     PeIdx peid;
-    std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry;
+    TokenStore::EntryPtr tsEntry;
     // TokenStore::Tag tag;
 };
 

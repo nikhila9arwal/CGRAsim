@@ -26,8 +26,8 @@ public:
     bool acceptToken(TokenStore::Token tok);
 
     bool isInstructionReady(
-        std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry, InstructionMemory::Instruction* inst);
-    void executeInstruction(std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry);
+        TokenStore::EntryPtr tsEntry, Instruction* inst);
+    void executeInstruction(TokenStore::EntryPtr tsEntry);
     void setStaticParam(Location& loc, Word param) {
         instructionMemory.setStaticParam(loc, param);
     }

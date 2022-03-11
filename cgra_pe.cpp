@@ -21,13 +21,13 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
             CgraEvent* event = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
             cgra->pushEvent(event);
         }
-        tokenStore.removeEntry(tok.tag);
+        tokenStore.erase(tok.tag);
     }
     return true;
 }
 
 bool ProcessingElement::isInstructionReady(
-    std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry, InstructionMemory::Instruction* inst) {
+    TokenStore::EntryPtr tsEntry, Instruction* inst) {
     if (inst->isPredicated && !tsEntry->predicateValid) {
         return false;
     }
@@ -40,7 +40,7 @@ bool ProcessingElement::isInstructionReady(
     return true;
 }
 
-void ProcessingElement::executeInstruction(std::shared_ptr<TokenStore::TokenStoreEntry> tsEntry) {
+void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     // auto tsEntry = tokenStore.getTokenStoreEntry(tag);
     auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
@@ -52,7 +52,7 @@ void ProcessingElement::executeInstruction(std::shared_ptr<TokenStore::TokenStor
 
     //TODO (nikhil): List of destinations should be sent out along with the output
     for (auto loc : instruction->dest) {
-        TokenStore::Token tok(loc.pos, output, loc.inst, tsEntry->tag.cbid);
+        TokenStore::Token tok{loc.pos, output, loc.inst, tsEntry->tag.cbid};
         CgraEvent*  event =  new SendTokenCgraEvent(cgra->currentTime + cgra->executionDelay, loc.pe, tok);
         cgra->pushEvent(event);
     }
