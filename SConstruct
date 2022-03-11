@@ -9,4 +9,4 @@ env["CXXFLAGS"] = ["-std=c++17"]
 
 env.Append(LIBS = ["config++"])
 
-env.Program("core_cgra", [Glob("*.cpp")])
+env.Program("cgra", [Glob("*.cpp")])
