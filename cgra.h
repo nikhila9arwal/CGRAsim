@@ -14,7 +14,9 @@ class Network;
 class BusNetwork;
 class ProcessingElement;
 
-
+/**
+ * @brief A single CGRA fabric.
+ */
 class Cgra {//: public Engine {
 public:
     Cgra(
@@ -38,6 +40,12 @@ public:
     
     void pushEvent(CgraEvent* event);
 
+    class OutOfEvents {};
+    
+    void tick();
+
+    inline Cycles now() const { return currentTime; }
+
     ProcessingElement* getProcessingElement(PeIdx peid) {
         return processingElements.at(peid);
     }
@@ -47,18 +55,20 @@ public:
 
     Network* getNetwork();
 
-    uint32_t currentTime;
-    uint32_t networkDelay;
-    uint32_t executionDelay;
-    uint32_t setTokenDelay;
-    uint32_t setTokenFailDelay;
+    // TODO (nzb): Non-const member fields of classes should _never_ be publicly exposed.
+    // TODO (nzb): All times are of type Cycles.
+    Cycles currentTime;
+    Cycles networkDelay;
+    Cycles executionDelay;
+    Cycles setTokenDelay;
+    Cycles setTokenFailDelay;
 
 private:
     // BaseCache* l1i;
     // BaseCache* l1d;
     std::priority_queue<CgraEvent*> pq;
     CbIdx cbidx;
-    BusNetwork* network;
+    Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;
     std::vector<std::vector<Location>> inputDestinationMap;
 
@@ -66,7 +76,6 @@ private:
     void loadStaticParams(Config& bitstream, void* context);
     void loadInputMap(Config& bitstream);
     void loadRuntimeInputs(Word* inputs);
-    void tick();
 };
 
 }  // namespace cgra

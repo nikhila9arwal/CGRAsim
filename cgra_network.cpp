@@ -9,7 +9,7 @@ namespace cgra {
 void BusNetwork::sendToken(PeIdx peid, TokenStore::Token tok) {
     ProcessingElement * pe = cgra->getProcessingElement(peid);
     if (!pe->acceptToken(tok)) {
-        uint32_t newEventTime = cgra->currentTime + cgra->networkDelay + cgra->setTokenFailDelay;
+        Cycles newEventTime = cgra->currentTime + cgra->networkDelay + cgra->setTokenFailDelay;
         CgraEvent* event =  new SendTokenCgraEvent(newEventTime, peid, tok);
         cgra->pushEvent(event);
     }

@@ -39,5 +39,14 @@ int main(){
     cgra.configure("outdataflow_copy.cfg", NULL);
     uint64_t args[3] = {1,2,3};
     cgra.execute(args);
+
+    try {
+        while (true) {
+            cgra.tick();
+        }
+    } catch (platy::sim::cgra::Cgra::OutOfEvents e) {
+        // nothing
+    }
+    
     return 0;
 }

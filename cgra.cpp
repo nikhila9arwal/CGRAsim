@@ -28,11 +28,11 @@ Cgra::Cgra(
     
     
     //Not sure about this
-    currentTime = 0;
-    networkDelay = 2;
-    executionDelay = 1;
-    setTokenDelay = 2;
-    setTokenFailDelay = 1;
+    currentTime = 0_cycles;
+    networkDelay = 2_cycles;
+    executionDelay = 1_cycles;
+    setTokenDelay = 2_cycles;
+    setTokenFailDelay = 1_cycles;
 }
 
 //TODO (nikhil): acceptToken
@@ -79,9 +79,21 @@ void Cgra::execute(uint64_t* const args){//std::shared_ptr<TaskReq> req) {
     Word* runtimeInputs = (Word*)args;
     loadRuntimeInputs(runtimeInputs);
     cbidx = cbidx + 1_cbid;
-    while (!pq.empty()) {
-        currentTime = pq.top()->timestamp;
-        tick();
+}
+
+void Cgra::tick() {
+    if (pq.empty()) {
+        throw OutOfEvents{};
+    }
+    
+    // move time forward to the next event
+    currentTime = pq.top()->timestamp;
+
+    // execute until the next time step
+    while (!pq.empty() && pq.top()->timestamp <= currentTime) {
+        CgraEvent* event = pq.top();
+        event->go(this);
+        pq.pop();
     }
 }
 
@@ -144,14 +156,6 @@ void Cgra::loadRuntimeInputs(Word* inputs) {
             pushEvent(event);
         }
         inputs++;
-    }
-}
-
-void Cgra::tick() {
-    while (!pq.empty() && pq.top()->timestamp <= currentTime) {
-        CgraEvent* readyEvent = pq.top();
-        readyEvent->go(this);
-        pq.pop();
     }
 }
 

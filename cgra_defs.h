@@ -13,12 +13,14 @@
 #include "qassert.h"
 #include <memory>
 
+// TODO (nzb): Remove when merged.
+DERIVE_STRONGER_INT(Cycles, uint64_t, cycles)
+
 DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
 DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
 DERIVE_STRONGER_INT(InstrMemIdx, int32_t, instid)
 DERIVE_STRONGER_INT(TokenStIdx, int32_t, tokenstid)
-
 
 namespace platy {
 namespace sim {

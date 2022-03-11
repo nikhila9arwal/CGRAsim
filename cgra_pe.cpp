@@ -17,7 +17,7 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
         //TODO: set and send would be different events. Send would be handled by network.
         //Network delay would only be known by the network
         if(!instruction->isPredicated || tokenStoreEntry->predicate){
-            uint32_t newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
+            Cycles newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
             CgraEvent* event = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
             cgra->pushEvent(event);
         }
