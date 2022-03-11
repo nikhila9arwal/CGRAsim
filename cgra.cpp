@@ -16,13 +16,13 @@ Cgra::Cgra(
     // TileIdx tile,
     // EngineIdx _engIdx,
     uint32_t _numPes,
-    uint32_t _numInsts, //TODO (nikhil): change to numInstrsPerPE
+    uint32_t _numInstrsPerPE, 
     uint32_t _numThrds)
     {//: Engine(name, tile, _engIdx) {
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
-            new ProcessingElement{_numInsts * _numThrds, _numInsts, p, this});
+            new ProcessingElement{_numInstrsPerPE * _numThrds, _numInstrsPerPE, p, this});
     }
     network = new BusNetwork(this);
     

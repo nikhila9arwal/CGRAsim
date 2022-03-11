@@ -46,7 +46,9 @@ void ProcessingElement::executeInstruction(std::shared_ptr<TokenStore::TokenStor
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
-    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime<<"\n";
+
+    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime;
+    std::cout<<"\t Output = "<< output << "\n";
 
     //TODO (nikhil): List of destinations should be sent out along with the output
     for (auto loc : instruction->dest) {
