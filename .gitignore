@@ -1,3 +1,4 @@
 *~
 *.o
 core_cgra
+.sconsign.dblite
