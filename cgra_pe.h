@@ -2,8 +2,8 @@
 #pragma once
 
 #include "cgra_defs.h"
-#include "cgra_im.h"
-#include "cgra_ts.h"
+#include "cgra_instr_mem.h"
+#include "cgra_tok_st.h"
 #include "cgra_event.h"
 #include "cgra.h"
 

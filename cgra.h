@@ -3,7 +3,7 @@
 
 // #include "../engine.h"
 #include "cgra_defs.h"
-#include "cgra_ts.h"
+#include "cgra_tok_st.h"
 #include "cgra_event.h"
 
 namespace platy {
@@ -11,7 +11,6 @@ namespace sim {
 namespace cgra {
 
 class Network;
-class BusNetwork;
 class ProcessingElement;
 
 /**

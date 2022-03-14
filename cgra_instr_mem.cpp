@@ -1,6 +1,6 @@
 
 
-#include "cgra_im.h"
+#include "cgra_instr_mem.h"
 
 namespace platy {
 namespace sim {

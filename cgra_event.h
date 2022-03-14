@@ -2,7 +2,7 @@
 #pragma once
 
 #include "cgra_defs.h"
-#include "cgra_ts.h"
+#include "cgra_tok_st.h"
 
 namespace platy {
 namespace sim {
