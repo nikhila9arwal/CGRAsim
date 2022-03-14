@@ -18,7 +18,6 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
         //Network delay would only be known by the network
         if(!instruction->isPredicated || tokenStoreEntry->predicate){
             Cycles newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
-            std::cout<<"Ready:"<<newEventTime<<"\n";
             CgraEvent* newEvent = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
             cgra->pushEvent(newEvent);
         }

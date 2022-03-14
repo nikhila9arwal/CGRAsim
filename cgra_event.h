@@ -13,7 +13,7 @@ class CgraEvent {
 public:
     CgraEvent(Cycles _timestamp) : timestamp(_timestamp) {}
 
-    bool operator<(const class CgraEvent& other) const  // <  ==> > for min heap
+    bool operator<(const class CgraEvent& other) const // <  ==> > for min heap
     {
         return timestamp > other.timestamp;
     }
@@ -28,6 +28,7 @@ public:
     ExecuteCgraEvent(Cycles _timestamp, PeIdx _peid, TokenStore::EntryPtr _tsEntry)
         : CgraEvent(_timestamp), peid(_peid), tsEntry(_tsEntry) {}
     void go(Cgra* cgra) const;
+
 
 private:
     PeIdx peid;
@@ -44,6 +45,13 @@ public:
 private:
     PeIdx peid;
     TokenStore::Token tok;
+};
+
+struct Cmprtr {
+    bool operator()(const CgraEvent* first, const CgraEvent* second) const // <  ==> > for min heap
+        {
+            return first->timestamp > second->timestamp;
+        }
 };
 
 }

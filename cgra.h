@@ -66,7 +66,7 @@ public:
 private:
     // BaseCache* l1i;
     // BaseCache* l1d;
-    std::priority_queue<CgraEvent*> pq;
+    std::priority_queue<CgraEvent*, std::vector<CgraEvent*>, Cmprtr> pq;
     CbIdx cbidx;
     Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;
