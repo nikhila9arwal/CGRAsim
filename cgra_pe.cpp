@@ -18,8 +18,9 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
         //Network delay would only be known by the network
         if(!instruction->isPredicated || tokenStoreEntry->predicate){
             Cycles newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
-            CgraEvent* event = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
-            cgra->pushEvent(event);
+            std::cout<<"Ready:"<<newEventTime<<"\n";
+            CgraEvent* newEvent = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
+            cgra->pushEvent(newEvent);
         }
         tokenStore.erase(tok.tag);
     }
@@ -53,8 +54,8 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     //TODO (nikhil): List of destinations should be sent out along with the output
     for (auto loc : instruction->dest) {
         TokenStore::Token tok{loc.pos, output, loc.inst, tsEntry->tag.cbid};
-        CgraEvent*  event =  new SendTokenCgraEvent(cgra->currentTime + cgra->executionDelay, loc.pe, tok);
-        cgra->pushEvent(event);
+        CgraEvent*  newEvent =  new SendTokenCgraEvent(cgra->currentTime + cgra->executionDelay, loc.pe, tok);
+        cgra->pushEvent(newEvent);
     }
 }
 

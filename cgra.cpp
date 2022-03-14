@@ -91,9 +91,9 @@ void Cgra::tick() {
 
     // execute until the next time step
     while (!pq.empty() && pq.top()->timestamp <= currentTime) {
-        CgraEvent* event = pq.top();
-        event->go(this);
+        CgraEvent * event = pq.top();
         pq.pop();
+        event->go(this);
     }
 }
 

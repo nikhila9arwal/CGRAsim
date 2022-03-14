@@ -37,7 +37,7 @@ int main(){
 
     platy::sim::cgra::Cgra cgra(4,4,4);
     cgra.configure("outdataflow_copy.cfg", NULL);
-    uint64_t args[3] = {1,2,3};
+    uint64_t args[3] = {1, 1,1};
     cgra.execute(args);
 
     try {

@@ -11,6 +11,7 @@ namespace cgra {
 void ExecuteCgraEvent::go(Cgra* cgra) const { 
     ProcessingElement* pe = cgra->getProcessingElement(peid);
     pe->executeInstruction(tsEntry); 
+    std::cout<<"ExecuteCgraEvent: Pe, Inst -- "<<tsEntry->
 }
 
 void SendTokenCgraEvent::go(Cgra* cgra) const { 
