@@ -8,8 +8,6 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
-//TODO (nikhil): cgra namespace platy->sim->cgra
-//TODO (nikhil): Change name to Cgra. Cgra would contain a cgra object
 
 Cgra::Cgra(
     // const std::string& name,
@@ -35,17 +33,6 @@ Cgra::Cgra(
     setTokenFailDelay = 1_cycles;
 }
 
-//TODO (nikhil): acceptToken
-// bool Cgra::setToken(PeIdx pe, TokenStore::Token tok) {
-//     return processingElements[pe]->setToken(tok);
-// }
-
-// void Cgra::sendToken(PeIdx pe, TokenStore::Token tok) { network->sendToken(pe, tok); }
-
-// void Cgra::executeInstruction(PeIdx pe, TokenStore::Tag tag) {
-//     processingElements[pe]->executeInstruction(tag);
-// }
-
 void Cgra::pushEvent(CgraEvent* event){
     pq.push(event);
 }
@@ -55,16 +42,16 @@ Network* Cgra::getNetwork(){
 }
 
 // TODO (nikhil): Change wunderpus decompression cfg to have params
-void Cgra::configure(std::string filename, void* context){//const Engine::FunctionConfiguration& functionConf){
+void Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
     // Config conf(functionConf.filename.c_str());
-    Config conf(filename.c_str());
+    Config conf(functionConf.filename.c_str());
     loadBitstream(conf);
     // loadStaticParams(conf, functionConf.context);
-    loadStaticParams(conf, context);
+    loadStaticParams(conf, functionConf.context);
     loadInputMap(conf);
 }
 
-void Cgra::execute(uint64_t* const args){//std::shared_ptr<TaskReq> req) {
+void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req) {
     // TODO (nikhil): check size of inputs
 
     // TODO (nikhil) :  Move to new function
@@ -76,7 +63,7 @@ void Cgra::execute(uint64_t* const args){//std::shared_ptr<TaskReq> req) {
     // }
 
     // Word* runtimeInputs = (Word*)req->args;
-    Word* runtimeInputs = (Word*)args;
+    Word* runtimeInputs = (Word*)req->args;
     loadRuntimeInputs(runtimeInputs);
     cbidx = cbidx + 1_cbid;
 }
@@ -121,6 +108,7 @@ void Cgra::loadStaticParams(Config& bitstream, void* context) {
         Word param = *(Word*)((uint8_t*)context + paramOffset);
         for (int j = 0;; j++) {
             std::string paramDestKey = paramKey + qformat(".dest_{}", j);
+            if(!bitstream.exists(paramDestKey)) break;
             auto loc = Location(bitstream, paramDestKey);
             processingElements[loc.pe]->setStaticParam(loc, param);
         }

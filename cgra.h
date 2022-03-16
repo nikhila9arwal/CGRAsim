@@ -12,7 +12,6 @@ namespace cgra {
 
 class Network;
 class ProcessingElement;
-
 /**
  * @brief A single CGRA fabric.
  */
@@ -29,13 +28,12 @@ public:
     // void setCaches(BaseCache* _l1i, BaseCache* _l1d) : l1i(_l1i), l1d(_l1d) {;}
     // BaseCache* getL1d() { return l1d; }
     // void configure(const FunctionConfiguration& functionConf);
-    void configure(std::string filename, void* context);
+    void configure(const FunctionConfiguration& functionConf);
     // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
 
     //TODO (nikhil): pull out taskreq. Engine needs to know which function to execute or route inputs to
-    void execute(uint64_t* const args);
-    // TODO (nikhil): use getProcessingElement instead;
+    void execute(std::shared_ptr<TaskReq> req);
     
     void pushEvent(CgraEvent* event);
 

@@ -81,11 +81,12 @@ void Instruction::decode(std::string type) {
         // TODO (nikhil): Do a cache request. Look at simple core.
         // Stall till reply. Reply gives permission to do readFromApp.
         applyFn = [](Word lhs, Word rhs) {
+            return  * ((Word*)lhs+ rhs);
             // Word readVal;
             // readFromApp<Word>(1_pid, (void*)((Word*)lhs + rhs), readVal);
             // return readVal;
-            lhs++; //unused param
-            return rhs;
+            // lhs++; //unused param
+            // return rhs;
         };
     } else if (type == "STORE") {  // TODO (nikhil): load using simulator method
                                    // --
@@ -94,10 +95,11 @@ void Instruction::decode(std::string type) {
         // TODO (nikhil): Do an exclusive cache request. Look at simple core.
         // Stall till reply. Reply gives permission to do writeToApp.
         applyFn = [](Word lhs, Word rhs) {
+            *(Word*)lhs  = rhs; return rhs;
             // Word readVal;
             // writeToApp<Word>(1_pid, (void*)((Word*)lhs), rhs);
-            lhs++;// unused param
-            return rhs;
+            // lhs++;// unused param
+            // return rhs;
         };
     }
 
