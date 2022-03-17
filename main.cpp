@@ -1,12 +1,13 @@
 // #include "cgra.h"
 // #include "core_cgra.h"
 #include "cgra.h"
+#include <iomanip>
 // #include "cgra_defs.h"
 
 struct WunderpusDecompression{
-    uint64_t* data;
-    uint64_t* deltas;
-    uint64_t* bases;
+    int64_t* data;
+    int64_t* deltas;
+    int64_t* bases;
 };
 int main(){
     
@@ -26,9 +27,9 @@ int main(){
     // return 0;
 
     WunderpusDecompression params;
-    params.data = (uint64_t*)(new int64_t[8]);
-    params.deltas = (uint64_t*)(new int64_t[8] {31,15,31,15,31,15,31,15});
-    params.bases = (uint64_t*)(new int64_t{1});
+    params.data = new int64_t[8];
+    params.deltas = new int64_t[8] {31,15,31,15,0x5f,15,31,15};
+    params.bases = new int64_t{1};
 
     platy::sim::cgra::FunctionConfiguration functionConf;
     functionConf.filename = "wunderpus-decompress copy.cfg";
@@ -36,15 +37,20 @@ int main(){
     functionConf.isMemberFunction = false;
     functionConf.functionPtr = nullptr;
 
-    uint64_t args =  (uint64_t)&(params.data[1]);
-    uint32_t argBytes = sizeof(int64_t);
+    uintptr_t args =  (uintptr_t)&(params.data[1]);
 
-    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, argBytes);
-
+    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));
 
 
-    platy::sim::cgra::Cgra cgra(8,8,8);
+    platy::sim::cgra::Cgra cgra(/*pes=*/8,/*insts=*/8,/*threads=*/8);
     cgra.configure(functionConf);
+    cgra.execute(req);
+    
+    cgra.tick();
+
+    args =  (uintptr_t)&(params.data[4]);
+    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));
+
     cgra.execute(req);
 
     try {
@@ -55,6 +61,7 @@ int main(){
         // nothing
     }
     std::cout<<params.data[1]<<"\n";
+    std::cout<<std::hex<<params.data[4]<<"\n";
 
     
     return 0;
