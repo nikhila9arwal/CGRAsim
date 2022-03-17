@@ -26,10 +26,9 @@ int main(){
     // return 0;
 
     WunderpusDecompression params;
-    params.data = new uint64_t[8];
-    params.deltas = new uint64_t[8] {31,15,31,15,31,15,31,15};
-    params.bases = new uint64_t{1};
-    std::cout<<"deltas in main: "<< params.deltas<<"\n";
+    params.data = (uint64_t*)(new int64_t[8]);
+    params.deltas = (uint64_t*)(new int64_t[8] {31,15,31,15,31,15,31,15});
+    params.bases = (uint64_t*)(new int64_t{1});
 
     platy::sim::cgra::FunctionConfiguration functionConf;
     functionConf.filename = "wunderpus-decompress copy.cfg";
@@ -37,10 +36,10 @@ int main(){
     functionConf.isMemberFunction = false;
     functionConf.functionPtr = nullptr;
 
-    uint64_t* args = new uint64_t;
-    uint32_t argBytes = sizeof(uint64_t);
-    args =  &(params.data[1]);
-    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, args, argBytes);
+    uint64_t args =  (uint64_t)&(params.data[1]);
+    uint32_t argBytes = sizeof(int64_t);
+
+    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, argBytes);
 
 
 
@@ -55,6 +54,8 @@ int main(){
     } catch (platy::sim::cgra::Cgra::OutOfEvents e) {
         // nothing
     }
+    std::cout<<params.data[1]<<"\n";
+
     
     return 0;
     // platy::sim::cgra::FunctionConfiguration functionConf;

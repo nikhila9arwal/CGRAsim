@@ -44,8 +44,10 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     // auto tsEntry = tokenStore.getTokenStoreEntry(tag);
     auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
+
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
+
 
     std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime;
     std::cout<<"\t Output = "<< output << "\n";
