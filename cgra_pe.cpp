@@ -7,23 +7,50 @@ namespace sim {
 namespace cgra {
 
 bool ProcessingElement::acceptToken(TokenStore::Token tok) {
+    if (readyQueueCapacity == readyQueue.size()) {
+        return false;
+    }
+    
     auto tokenStoreEntry = tokenStore.acceptToken(tok);
     if (tokenStoreEntry == nullptr) {
         return false;
     }
+    
     // do a ready check
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
     if (isInstructionReady(tokenStoreEntry, instruction)) {
         //TODO: set and send would be different events. Send would be handled by network.
         //Network delay would only be known by the network
-        if(!instruction->isPredicated || tokenStoreEntry->predicate){
-            Cycles newEventTime = (cgra->currentTime + cgra->networkDelay + cgra->setTokenDelay);
-            CgraEvent* newEvent = new ExecuteCgraEvent(newEventTime, selfIdx, tokenStoreEntry);
-            cgra->pushEvent(newEvent);
+        if(!instruction->isPredicated || tokenStoreEntry->predicate) {
+            if (!execStage.empty()) {
+                Cycles execTime = execStage.acquire() + cgra->frontEndDelay;
+                auto* execEvent = new ExecutionEvent{execTime, selfIdx, tokenStoreEntry};
+                cgra->pushEvent(execEvent);
+            } else {
+                readyQueue.push_back(tokenStoreEntry);
+            }
         }
         tokenStore.erase(tok.tag);
     }
     return true;
+}
+
+void ProcessingElement::acknowledgeToken() {
+    qassert(execStage.empty());
+
+    execStage.release(0_cycles /* exec latency modeled in execute below */);
+
+    if (!readyQueue.empty()) {
+        auto tokenStoreEntry = readyQueue.front();
+        readyQueue.pop_front();
+
+        auto inst = instructionMemory.getInstruction(tokenStoreEntry->tag.instIdx);
+
+        // TODO (nzb): Front-end delay already paid above???
+        Cycles execTime = execStage.acquire() /* + cgra->frontEndDelay*/;
+        auto* execEvent = new ExecutionEvent{execTime, selfIdx, tokenStoreEntry};
+        cgra->pushEvent(execEvent);
+    }
 }
 
 bool ProcessingElement::isInstructionReady(
@@ -48,16 +75,17 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
 
-
     std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime;
     std::cout<<"\t Output = "<< output << "\n";
 
-    //TODO (nikhil): List of destinations should be sent out along with the output
-    for (auto loc : instruction->dest) {
-        TokenStore::Token tok{loc.pos, output, loc.inst, tsEntry->tag.cbid};
-        CgraEvent*  newEvent =  new SendTokenCgraEvent(cgra->currentTime + cgra->executionDelay, loc.pe, tok);
-        cgra->pushEvent(newEvent);
-    }
+    auto* wbEvent = new WritebackEvent{ cgra->currentTime + execLatency, tsEntry, output };
+    cgra->pushEvent(wbEvent);
+}
+
+void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
+    auto& inst = instructionMemory.getInstruction(tsEntry->tag.instIdx);
+    
+    cgra->getNetwork()->sendToken(selfIdx, inst.destinations, word, tsEntry->tag.cbIdx);
 }
 
 // void ProcessingElement::pushFullyImmediateInstructions(CbIdx cbid) {

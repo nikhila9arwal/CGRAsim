@@ -19,32 +19,7 @@ public:
     }
 
     virtual void go(Cgra* cgra) const = 0;
-    Cycles timestamp;
-};
-
-
-class ExecuteCgraEvent : public CgraEvent {
-public:
-    ExecuteCgraEvent(Cycles _timestamp, PeIdx _peid, TokenStore::EntryPtr _tsEntry)
-        : CgraEvent(_timestamp), peid(_peid), tsEntry(_tsEntry) {}
-    void go(Cgra* cgra) const;
-
-
-private:
-    PeIdx peid;
-    TokenStore::EntryPtr tsEntry;
-    // TokenStore::Tag tag;
-};
-
-class SendTokenCgraEvent : public CgraEvent {
-public:
-    SendTokenCgraEvent(Cycles _timestamp, PeIdx _peid, TokenStore::Token _tok)
-        : CgraEvent(_timestamp), peid(_peid), tok(_tok) {}
-    void go(Cgra* cgra) const;
-
-private:
-    PeIdx peid;
-    TokenStore::Token tok;
+    Cycles timestamp; // TODO (nzb): This doesn't need to be part of the event... you push events at a specific time instead
 };
 
 struct Cmprtr {

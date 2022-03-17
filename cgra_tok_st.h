@@ -12,8 +12,8 @@ public:
     struct Tag {
         Tag(InstrMemIdx _instIdx, CbIdx _cbid) : instIdx(_instIdx), cbid(_cbid) {}
         ~Tag() {}
-        InstrMemIdx instIdx;
-        CbIdx cbid;
+        InstrMemIdx instIdx; // TODO (nzb): Why Idx vs id ?
+        CbIdx cbid; // TODO (nzb): Make TaskIdx instead
         bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
             return instIdx == other.instIdx && cbid == other.cbid;
         }

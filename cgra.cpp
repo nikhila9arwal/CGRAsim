@@ -138,12 +138,17 @@ void Cgra::loadInputMap(Config& bitstream) {
 // TODO (nikhil): change name to launch new thread return thread id
 void Cgra::loadRuntimeInputs(Word* inputs) {
     for (auto destinations : inputDestinationMap) {
+        network->sendToken(*inputs, destinations);
+        inputs++;
+
+#if 0
         for (auto destination : destinations) {
             TokenStore::Token tok(destination.pos, *inputs, destination.inst, cbidx);
             CgraEvent*  event = new SendTokenCgraEvent(currentTime, destination.pe, tok);
             pushEvent(event);
         }
         inputs++;
+#endif
     }
 }
 

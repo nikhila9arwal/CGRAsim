@@ -18,7 +18,7 @@ struct Instruction {
     Word rhsImm;
     Word (*applyFn)(Word lhs, Word rhs);
     
-    std::vector<Location> dest;
+    std::vector<Location> destinations;
 
     void loadBitstream(Config& bitstream, std::string key);
     void decode(std::string type);
