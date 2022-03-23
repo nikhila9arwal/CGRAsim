@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "cgra_defs.h"
 #include "cgra_instr.h"
+#include "cgra_defs.h"
 
 namespace platy {
 namespace sim {

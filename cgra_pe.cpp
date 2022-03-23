@@ -23,8 +23,8 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
         //Network delay would only be known by the network
         if(!instruction->isPredicated || tokenStoreEntry->predicate) {
             if (!execStage.empty()) {
-                Cycles execTime = execStage.acquire() + cgra->frontEndDelay;
-                auto* execEvent = new ExecutionEvent{execTime, selfIdx, tokenStoreEntry};
+                Cycles execTime = execStage.acquire() + frontEndLatency;
+                CgraEvent * execEvent = new ExecutionEvent{execTime, this, tokenStoreEntry};
                 cgra->pushEvent(execEvent);
             } else {
                 readyQueue.push_back(tokenStoreEntry);
@@ -44,11 +44,11 @@ void ProcessingElement::acknowledgeToken() {
         auto tokenStoreEntry = readyQueue.front();
         readyQueue.pop_front();
 
-        auto inst = instructionMemory.getInstruction(tokenStoreEntry->tag.instIdx);
+        // auto inst = instructionMemory.getInstruction(tokenStoreEntry->tag.instIdx);
 
         // TODO (nzb): Front-end delay already paid above???
         Cycles execTime = execStage.acquire() /* + cgra->frontEndDelay*/;
-        auto* execEvent = new ExecutionEvent{execTime, selfIdx, tokenStoreEntry};
+        auto* execEvent = new ExecutionEvent{execTime, this, tokenStoreEntry};
         cgra->pushEvent(execEvent);
     }
 }
@@ -75,17 +75,17 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
 
-    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->currentTime;
+    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now();
     std::cout<<"\t Output = "<< output << "\n";
 
-    auto* wbEvent = new WritebackEvent{ cgra->currentTime + execLatency, tsEntry, output };
+    auto* wbEvent = new WritebackEvent{ cgra->now() + execLatency, this, tsEntry, output };
     cgra->pushEvent(wbEvent);
 }
 
 void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
-    auto& inst = instructionMemory.getInstruction(tsEntry->tag.instIdx);
+    auto inst = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     
-    cgra->getNetwork()->sendToken(selfIdx, inst.destinations, word, tsEntry->tag.cbIdx);
+    cgra->getNetwork()->sendToken(selfIdx, inst->destinations, word, tsEntry->tag.cbid);
 }
 
 // void ProcessingElement::pushFullyImmediateInstructions(CbIdx cbid) {

@@ -39,7 +39,7 @@ void Instruction::loadBitstream(Config& bitstream, std::string key) {
     }
     for (int i = 0;; i++) {
         if (bitstream.exists(key + qformat(".dest_{}", i))) {
-            dest.push_back(Location(bitstream, key + qformat(".dest_{}", i)));
+            destinations.push_back(Location(bitstream, key + qformat(".dest_{}", i)));
         } else {
             break;
         }

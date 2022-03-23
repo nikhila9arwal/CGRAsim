@@ -18,7 +18,7 @@ public:
         return timestamp > other.timestamp;
     }
 
-    virtual void go(Cgra* cgra) const = 0;
+    virtual void go() = 0;
     Cycles timestamp; // TODO (nzb): This doesn't need to be part of the event... you push events at a specific time instead
 };
 

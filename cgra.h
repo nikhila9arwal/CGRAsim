@@ -51,16 +51,11 @@ public:
     }
 
     Network* getNetwork();
-
-    // TODO (nzb): Non-const member fields of classes should _never_ be publicly exposed.
-    // TODO (nzb): All times are of type Cycles.
-    Cycles currentTime;
-    Cycles networkDelay;
-    Cycles executionDelay;
-    Cycles setTokenDelay;
-    Cycles setTokenFailDelay;
+    void ackwnowledgeRuntimeInput();
 
 private:
+    Cycles currentTime;
+
     // BaseCache* l1i;
     // BaseCache* l1d;
     std::priority_queue<CgraEvent*, std::vector<CgraEvent*>, Cmprtr> pq;
@@ -68,11 +63,13 @@ private:
     Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;
     std::vector<std::vector<Location>> inputDestinationMap;
+    int inputsPendingAck;
 
     void loadBitstream(Config& bitstream);
     void loadStaticParams(Config& bitstream, void* context);
     void loadInputMap(Config& bitstream);
     void loadRuntimeInputs(Word* inputs);
+
 };
 
 }  // namespace cgra

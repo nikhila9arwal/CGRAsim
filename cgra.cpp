@@ -16,21 +16,17 @@ Cgra::Cgra(
     uint32_t _numPes,
     uint32_t _numInstrsPerPE, 
     uint32_t _numThrds)
-    {//: Engine(name, tile, _engIdx) {
+    : inputsPendingAck(0){//: Engine(name, tile, _engIdx) {
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
             new ProcessingElement{_numInstrsPerPE * _numThrds, _numInstrsPerPE, p, this});
     }
-    network = new BusNetwork(this);
+    network = new BusNetwork(this, 8);
     
     
     //Not sure about this
     currentTime = 0_cycles;
-    networkDelay = 2_cycles;
-    executionDelay = 1_cycles;
-    setTokenDelay = 2_cycles;
-    setTokenFailDelay = 1_cycles;
 }
 
 void Cgra::pushEvent(CgraEvent* event){
@@ -63,6 +59,9 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
     // }
 
     // Word* runtimeInputs = (Word*)req->args;
+    if (inputsPendingAck>0){
+        std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
+    }
     Word* runtimeInputs = (Word*)req->args;
     loadRuntimeInputs(runtimeInputs);
     cbidx = cbidx + 1_cbid;
@@ -80,7 +79,7 @@ void Cgra::tick() {
     while (!pq.empty() && pq.top()->timestamp <= currentTime) {
         CgraEvent * event = pq.top();
         pq.pop();
-        event->go(this);
+        event->go();
     }
 }
 
@@ -138,7 +137,8 @@ void Cgra::loadInputMap(Config& bitstream) {
 // TODO (nikhil): change name to launch new thread return thread id
 void Cgra::loadRuntimeInputs(Word* inputs) {
     for (auto destinations : inputDestinationMap) {
-        network->sendToken(*inputs, destinations);
+
+        network->sendToken(PeIdx(-1), destinations, *inputs, cbidx); //-1 represents outside world
         inputs++;
 
 #if 0
@@ -150,6 +150,12 @@ void Cgra::loadRuntimeInputs(Word* inputs) {
         inputs++;
 #endif
     }
+    inputsPendingAck = inputDestinationMap.size();
+}
+
+void Cgra::ackwnowledgeRuntimeInput(){
+    qassert(inputsPendingAck>0);
+    inputsPendingAck--;
 }
 
 }  // namespace cgra

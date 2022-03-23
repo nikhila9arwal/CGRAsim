@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "port.h"
 #include "cgra_defs.h"
 #include "cgra.h"
 
@@ -17,30 +18,34 @@ public:
 
 protected:
     Cgra* cgra;
+
 };
 
 class BusNetwork : public Network {
 public:
-    BusNetwork(Cgra* _cgra, int _bandwidth) : Network{_cgra}, port{_bandwidth} {}
-    void sendToken(PeIdx src, const std::vector<Location>& dsts, Word word, CbIdx cbidx) override;
+    BusNetwork(Cgra* _cgra, int _bandwidth) : Network{_cgra}, bandwidthPort{_bandwidth, _cgra} {}
+    void sendToken(PeIdx src, const std::vector<Location>& dsts, Word word, CbIdx cbidx);
+    const Cycles delay = 1_cycles;
+    Port bandwidthPort;
 
   private:
     class BusEvent : public CgraEvent {
       public:
-        BusEvent(BusNetwork* _network, PeIdx _src, std::vector<Location> _dsts, Word _word, CbIdx _cbidx);
-        void go(Cgra* cgra);
+        BusEvent(Cycles _timestamp, Cgra* _cgra, BusNetwork * _network, PeIdx _src, const std::vector<Location>& _dsts, Word _value, CbIdx _cbidx)
+        : CgraEvent(_timestamp), cgra(_cgra), network(_network), src(_src), dsts(_dsts), value(_value), cbidx(_cbidx) {}
+        void go();
 
       private:
+        Cgra* cgra;
         BusNetwork* network;
         PeIdx src;
         std::vector<Location> dsts; // TODO (nzb): This can probably
                                     // just be source, in a snooping
                                     // implementation
-        Word word;
+        Word value;
         CbIdx cbidx;
     };
 
-    Port port;
 };
 
 }

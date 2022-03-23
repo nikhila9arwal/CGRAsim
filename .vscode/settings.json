@@ -47,6 +47,7 @@
         "memory_resource": "cpp",
         "random": "cpp",
         "string": "cpp",
-        "*.h++": "cpp"
+        "*.h++": "cpp",
+        "iomanip": "cpp"
     }
 }

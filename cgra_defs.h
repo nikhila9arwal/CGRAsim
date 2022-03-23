@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "qassert.h"
 #include <memory>
+#include <algorithm>
 
 // TODO (nzb): Remove when merged.
 DERIVE_STRONGER_INT(Cycles, uint64_t, cycles)
