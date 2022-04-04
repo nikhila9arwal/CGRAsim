@@ -14,6 +14,8 @@
 #include <memory>
 #include <algorithm>
 
+using std::cout;
+
 // TODO (nzb): Remove when merged.
 DERIVE_STRONGER_INT(Cycles, uint64_t, cycles)
 const size_t MAX_ARGS = 6;

@@ -8,13 +8,14 @@
 #include "cgra.h"
 #include "port.h"
 #include "cgra_network.h"
+#include "cgra_network_port.h"
 
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-class ProcessingElement {
+class ProcessingElement : public NetworkPort {
 public:
     ProcessingElement(
         uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)

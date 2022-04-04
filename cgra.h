@@ -5,6 +5,7 @@
 #include "cgra_defs.h"
 #include "cgra_tok_st.h"
 #include "cgra_event.h"
+#include "cgra_input_port.h"
 
 namespace platy {
 namespace sim {
@@ -32,7 +33,6 @@ public:
     // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
 
-    //TODO (nikhil): pull out taskreq. Engine needs to know which function to execute or route inputs to
     void execute(std::shared_ptr<TaskReq> req);
     
     void pushEvent(CgraEvent* event);
@@ -51,7 +51,6 @@ public:
     }
 
     Network* getNetwork();
-    void ackwnowledgeRuntimeInput();
 
 private:
     Cycles currentTime;
@@ -63,7 +62,7 @@ private:
     Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;
     std::vector<std::vector<Location>> inputDestinationMap;
-    int inputsPendingAck;
+    InputPort* inputPort;
 
     void loadBitstream(Config& bitstream);
     void loadStaticParams(Config& bitstream, void* context);

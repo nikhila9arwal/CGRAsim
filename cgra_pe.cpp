@@ -85,7 +85,7 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
 void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
     auto inst = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     
-    cgra->getNetwork()->sendToken(selfIdx, inst->destinations, word, tsEntry->tag.cbid);
+    cgra->getNetwork()->sendToken(this, inst->destinations, word, tsEntry->tag.cbid);
 }
 
 // void ProcessingElement::pushFullyImmediateInstructions(CbIdx cbid) {

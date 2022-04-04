@@ -19,7 +19,7 @@ void BusNetwork::sendToken(PeIdx peid, TokenStore::Token tok) {
 }
 #endif
 
-void BusNetwork::sendToken(PeIdx src, const std::vector<Location>& dsts, Word value, CbIdx cbidx) {
+void BusNetwork::sendToken(NetworkPort* src, const std::vector<Location>& dsts, Word value, CbIdx cbidx) {
     CgraEvent * event = new BusEvent{bandwidthPort.grab(delay), cgra, this, src, dsts, value, cbidx};
     cgra->pushEvent(event);
 }
@@ -39,13 +39,8 @@ void BusNetwork::BusEvent::go() {
         timestamp = network->bandwidthPort.grab(network->delay);
         cgra->pushEvent(this);
     } else {
-        if(src == PeIdx(-1)){
-            cgra->ackwnowledgeRuntimeInput();
-        } else{
-            auto* srcPe = cgra->getProcessingElement(src);
-            srcPe->acknowledgeToken();
+            src->acknowledgeToken();
         }
-    }
 }
 
 }

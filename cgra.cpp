@@ -16,15 +16,14 @@ Cgra::Cgra(
     uint32_t _numPes,
     uint32_t _numInstrsPerPE, 
     uint32_t _numThrds)
-    : inputsPendingAck(0){//: Engine(name, tile, _engIdx) {
+    {//: Engine(name, tile, _engIdx) {
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
             new ProcessingElement{_numInstrsPerPE * _numThrds, _numInstrsPerPE, p, this});
     }
     network = new BusNetwork(this, 8);
-    
-    
+    inputPort = new InputPort(this, network);
     //Not sure about this
     currentTime = 0_cycles;
 }
@@ -59,9 +58,9 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
     // }
 
     // Word* runtimeInputs = (Word*)req->args;
-    if (inputsPendingAck>0){
-        std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
-    }
+    // if (inputsPendingAck>0){
+    //     std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
+    // }
     Word* runtimeInputs = (Word*)req->args;
     loadRuntimeInputs(runtimeInputs);
     cbidx = cbidx + 1_cbid;
@@ -138,7 +137,7 @@ void Cgra::loadInputMap(Config& bitstream) {
 void Cgra::loadRuntimeInputs(Word* inputs) {
     for (auto destinations : inputDestinationMap) {
 
-        network->sendToken(PeIdx(-1), destinations, *inputs, cbidx); //-1 represents outside world
+        inputPort->acceptToken(*inputs, destinations, cbidx);
         inputs++;
 
 #if 0
@@ -150,13 +149,8 @@ void Cgra::loadRuntimeInputs(Word* inputs) {
         inputs++;
 #endif
     }
-    inputsPendingAck = inputDestinationMap.size();
 }
 
-void Cgra::ackwnowledgeRuntimeInput(){
-    qassert(inputsPendingAck>0);
-    inputsPendingAck--;
-}
 
 }  // namespace cgra
 }  // namespace sim

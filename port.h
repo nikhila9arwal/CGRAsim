@@ -1,11 +1,11 @@
 #pragma once
-#include "cgra.h"
 #include "cgra_defs.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
+class Cgra;
 
 class Port {
 public:
@@ -14,26 +14,13 @@ public:
 
     /* @brief Return the first time that this Port will be available.
      */
-    Cycles grab(Cycles occupancy = 1_cycles) {
-        auto time = acquire();
-        release(occupancy);
-        return time;
-    }
+    Cycles grab(Cycles occupancy) ;
 
-    Cycles acquire() {
-        qassert(!empty());
-        auto time = std::max(cgra->now() /* TODO (nzb): How to get this??? */, available.front());
-        available.pop_front();
-        return time;
-    }
+    Cycles acquire();
 
-    void release(Cycles occupancy = 1_cycles) {
-        available.push_back(cgra->now() + occupancy);
-    }
+    void release(Cycles occupancy);
 
-    bool empty() {
-        return available.empty();
-    }
+    bool empty();
 
 private:
     std::deque<Cycles> available;
