@@ -70,9 +70,6 @@ void Cgra::tick() {
     if (pq.empty()) {
         throw OutOfEvents{};
     }
-    
-    // move time forward to the next event
-    currentTime = pq.top()->timestamp;
 
     // execute until the next time step
     while (!pq.empty() && pq.top()->timestamp <= currentTime) {
@@ -80,6 +77,8 @@ void Cgra::tick() {
         pq.pop();
         event->go();
     }
+    // move time forward to the next event
+    currentTime = pq.top()->timestamp;
 }
 
 void Cgra::loadBitstream(Config& bitstream) {

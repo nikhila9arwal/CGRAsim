@@ -60,8 +60,8 @@ int main(){
     } catch (platy::sim::cgra::Cgra::OutOfEvents e) {
         // nothing
     }
-    std::cout<<std::hex<<params.data[1]<<"\n";
-    std::cout<<std::hex<<params.data[4]<<"\n";
+    std::cout<<"x"<<std::hex<<params.data[1]<<"\n";
+    std::cout<<"x"<<std::hex<<params.data[4]<<"\n";
 
     
     return 0;
