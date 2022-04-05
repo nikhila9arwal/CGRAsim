@@ -7,14 +7,19 @@ namespace sim {
 namespace cgra {
 
 bool ProcessingElement::acceptToken(TokenStore::Token tok) {
+    
     if (readyQueueCapacity == readyQueue.size()) {
+        // if (tok.tag.instIdx == 1_instid && selfIdx == 1_peid && tok.tag.cbid == 0_cbid)
+        //     // cout<<"\n\n\n\n\n\n\n"<<cgra->now()<<" \n\n\n\n\n\n\n";
+            // cout<<selfIdx<<", "<<readyQueue.front()->tag.instIdx<< ", "<<readyQueue.front()->tag.cbid<<"\n";
         return false;
     }
-    
     auto tokenStoreEntry = tokenStore.acceptToken(tok);
     if (tokenStoreEntry == nullptr) {
         return false;
     }
+
+
     
     // do a ready check
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
@@ -25,6 +30,8 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
             if (!execStage.empty()) {
                 Cycles execTime = execStage.acquire() + frontEndLatency;
                 CgraEvent * execEvent = new ExecutionEvent{execTime, this, tokenStoreEntry};
+                //  if (selfIdx == 1_peid)
+                    // cout<<selfIdx<<", "<<tokenStoreEntry->tag.instIdx<< ", "<<tokenStoreEntry->tag.cbid<<"\n";
                 cgra->pushEvent(execEvent);
             } else {
                 readyQueue.push_back(tokenStoreEntry);
@@ -75,7 +82,7 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
 
-    std::cout<<"PE, Inst, Timestamp = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now();
+    std::cout<<"PE, Inst, Timestamp, Cbid = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now()<<", "<<tsEntry->tag.cbid;
     std::cout<<"\t Output = "<< output << "\n";
 
     auto* wbEvent = new WritebackEvent{ cgra->now() + execLatency, this, tsEntry, output };

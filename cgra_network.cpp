@@ -25,12 +25,14 @@ void BusNetwork::sendToken(NetworkPort* src, const std::vector<Location>& dsts, 
 }
 
 void BusNetwork::BusEvent::go() {
-    for (size_t i = dsts.size() - 1; i < dsts.size(); i--) {
-        auto dst = dsts[i];
+    for (size_t i = 0; i < dsts.size(); i++) {
+        auto dst = dsts.front();
         TokenStore::Token tok{dst.pos, value, dst.inst, cbidx};
         auto* dstPe = cgra->getProcessingElement(dst.pe);
-        if (dstPe->acceptToken(tok)) {
-            dsts.pop_back();
+        //return here;
+        dsts.erase(dsts.begin());
+        if (!dstPe->acceptToken(tok)) {
+            dsts.push_back(dst);
         }
     }
 

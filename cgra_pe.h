@@ -26,7 +26,7 @@ public:
             instructionMemory(instructionMemSize),
             execLatency(1),
             frontEndLatency(1),
-            readyQueueCapacity(1) {}
+            readyQueueCapacity(3) {}
 
     ~ProcessingElement() {}
     
