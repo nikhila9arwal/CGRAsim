@@ -35,7 +35,7 @@ public:
 
     void execute(std::shared_ptr<TaskReq> req);
     
-    void pushEvent(CgraEvent* event);
+    void pushEvent(CgraEvent* event, Cycles timestamp);
 
     class OutOfEvents {};
     
@@ -57,7 +57,8 @@ private:
 
     // BaseCache* l1i;
     // BaseCache* l1d;
-    std::priority_queue<CgraEvent*, std::vector<CgraEvent*>, Cmprtr> pq;
+    std::priority_queue<std::pair<Cycles, CgraEvent*>, 
+        std::vector<std::pair<Cycles, CgraEvent*>>, Cmprtr> eventQueue;
     CbIdx cbidx;
     Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;

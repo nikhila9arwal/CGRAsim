@@ -13,8 +13,9 @@
 #include "qassert.h"
 #include <memory>
 #include <algorithm>
+#include <utility>  // for std::pair
 
-using std::cout;
+using std::cout; // TODO (by): Remove when done with debugging?
 
 // TODO (nzb): Remove when merged.
 DERIVE_STRONGER_INT(Cycles, uint64_t, cycles)
@@ -22,8 +23,6 @@ const size_t MAX_ARGS = 6;
 const size_t MAX_ARG_BYTES = MAX_ARGS * sizeof(uint64_t);
 DERIVE_STRONGER_INT(ProcIdx, int32_t, pid);
 DERIVE_STRONGER_INT(ThreadIdx, int32_t, tid);
-
-
 
 DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
@@ -133,6 +132,6 @@ public:
     // ConditionVariable* cv;
 };
 
-} // namespace cgra
-} // namespace sim
-} // namespace platy
+}  // namespace cgra
+}  // namespace sim
+}  // namespace platy

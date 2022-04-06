@@ -60,30 +60,31 @@ private:
     std::deque<TokenStore::EntryPtr> readyQueue;
 
     class ExecutionEvent : public CgraEvent {
-        public:
-            ExecutionEvent (Cycles _timestamp, ProcessingElement* _pe, TokenStore::EntryPtr &_tsEntry) 
-                : CgraEvent(_timestamp), pe(_pe), tsEntry(_tsEntry){}
-            void go() { pe->executeInstruction(tsEntry); }
-        private:
-            ProcessingElement * pe;
-            TokenStore::EntryPtr tsEntry;
-    
+    public:
+        ExecutionEvent (ProcessingElement* _pe, TokenStore::EntryPtr &_tsEntry)
+            : CgraEvent(), pe(_pe), tsEntry(_tsEntry){}
+        void go() { pe->executeInstruction(tsEntry); }
+
+    private:
+        ProcessingElement* pe;
+        TokenStore::EntryPtr tsEntry;
+
     };
 
     class WritebackEvent : public CgraEvent {
-        public:
+    public:
         //return here;
-            WritebackEvent(Cycles timestamp, ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value) 
-                : CgraEvent(timestamp), pe(_pe), tsEntry(_tsEntry), value(_value) {}
-            void go() { pe->writeback(tsEntry, value); }
-        
-        private:
-            ProcessingElement* pe;
-            TokenStore::EntryPtr tsEntry;
-            Word value;
+        WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
+            : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
+        void go() { pe->writeback(tsEntry, value); }
+
+    private:
+        ProcessingElement* pe;
+        TokenStore::EntryPtr tsEntry;
+        Word value;
     };
 };
 
-}
-}
-}
+}  // namespace cgra
+}  // namespace sim
+}  // namespace platy

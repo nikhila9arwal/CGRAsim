@@ -20,7 +20,7 @@ Cgra::Cgra(
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
-            new ProcessingElement{_numInstrsPerPE * _numThrds, _numInstrsPerPE, p, this});
+            new ProcessingElement{_numInstrsPerPE* _numThrds, _numInstrsPerPE, p, this});
     }
     network = new BusNetwork(this, 8);
     inputPort = new InputPort(this, network);
@@ -28,8 +28,8 @@ Cgra::Cgra(
     currentTime = 0_cycles;
 }
 
-void Cgra::pushEvent(CgraEvent* event){
-    pq.push(event);
+void Cgra::pushEvent(CgraEvent* event, Cycles timestamp){
+    eventQueue.push(std::make_pair(timestamp, event));
 }
 
 Network* Cgra::getNetwork(){
@@ -67,18 +67,19 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
 }
 
 void Cgra::tick() {
-    if (pq.empty()) {
+    if (eventQueue.empty()) {
         throw OutOfEvents{};
     }
 
     // execute until the next time step
-    while (!pq.empty() && pq.top()->timestamp <= currentTime) {
-        CgraEvent * event = pq.top();
-        pq.pop();
+    // pq elements are pair<Cycles, Event*>
+    while (!eventQueue.empty() && eventQueue.top().first <= currentTime) {
+        CgraEvent* event = eventQueue.top().second;
+        eventQueue.pop();
         event->go();
     }
     // move time forward to the next event
-    currentTime = pq.top()->timestamp;
+    currentTime = eventQueue.top().first; // corresponds to time on top of queue.
 }
 
 void Cgra::loadBitstream(Config& bitstream) {

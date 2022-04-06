@@ -20,8 +20,9 @@ void BusNetwork::sendToken(PeIdx peid, TokenStore::Token tok) {
 #endif
 
 void BusNetwork::sendToken(NetworkPort* src, const std::vector<Location>& dsts, Word value, CbIdx cbidx) {
-    CgraEvent * event = new BusEvent{bandwidthPort.grab(delay), cgra, this, src, dsts, value, cbidx};
-    cgra->pushEvent(event);
+    Cycles timestamp = bandwidthPort.grab(delay);
+    CgraEvent* event = new BusEvent{cgra, this, src, dsts, value, cbidx};
+    cgra->pushEvent(event, timestamp);
 }
 
 void BusNetwork::BusEvent::go() {
@@ -38,11 +39,11 @@ void BusNetwork::BusEvent::go() {
 
     bool retry = !dsts.empty();
     if (retry) {
-        timestamp = network->bandwidthPort.grab(network->delay);
-        cgra->pushEvent(this);
+        Cycles timestamp = network->bandwidthPort.grab(network->delay);
+        cgra->pushEvent(this, timestamp);
     } else {
-            src->acknowledgeToken();
-        }
+        src->acknowledgeToken();
+    }
 }
 
 }

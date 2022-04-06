@@ -11,24 +11,19 @@ namespace cgra {
 class Cgra;
 class CgraEvent {
 public:
-    CgraEvent(Cycles _timestamp) : timestamp(_timestamp) {}
-
-    bool operator<(const class CgraEvent& other) const // <  ==> > for min heap
-    {
-        return timestamp > other.timestamp;
-    }
+    CgraEvent() {}
 
     virtual void go() = 0;
-    Cycles timestamp; // TODO (nzb): This doesn't need to be part of the event... you push events at a specific time instead
 };
 
 struct Cmprtr {
-    bool operator()(const CgraEvent* first, const CgraEvent* second) const // <  ==> > for min heap
-        {
-            return first->timestamp > second->timestamp;
-        }
+    bool operator()(const std::pair<Cycles, CgraEvent *> lhs,
+                  const std::pair<Cycles, CgraEvent *> rhs) const {
+        // <  ==> > for min heap
+        return lhs.first > rhs.first;
+    }
 };
 
-}
-}
-}
+}  // namespace cgra
+}  // namespace sim
+}  // namespace platy

@@ -29,10 +29,10 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
         if(!instruction->isPredicated || tokenStoreEntry->predicate) {
             if (!execStage.empty()) {
                 Cycles execTime = execStage.acquire() + frontEndLatency;
-                CgraEvent * execEvent = new ExecutionEvent{execTime, this, tokenStoreEntry};
+                CgraEvent* execEvent = new ExecutionEvent{this, tokenStoreEntry};
                 //  if (selfIdx == 1_peid)
                     // cout<<selfIdx<<", "<<tokenStoreEntry->tag.instIdx<< ", "<<tokenStoreEntry->tag.cbid<<"\n";
-                cgra->pushEvent(execEvent);
+                cgra->pushEvent(execEvent, execTime);
             } else {
                 readyQueue.push_back(tokenStoreEntry);
             }
@@ -55,8 +55,8 @@ void ProcessingElement::acknowledgeToken() {
 
         // TODO (nzb): Front-end delay already paid above???
         Cycles execTime = execStage.acquire() /* + cgra->frontEndDelay*/;
-        auto* execEvent = new ExecutionEvent{execTime, this, tokenStoreEntry};
-        cgra->pushEvent(execEvent);
+        auto* execEvent = new ExecutionEvent{this, tokenStoreEntry};
+        cgra->pushEvent(execEvent, execTime);
     }
 }
 
@@ -85,8 +85,9 @@ void ProcessingElement::executeInstruction(TokenStore::EntryPtr tsEntry) {
     std::cout<<"PE, Inst, Timestamp, Cbid = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now()<<", "<<tsEntry->tag.cbid;
     std::cout<<"\t Output = "<< output << "\n";
 
-    auto* wbEvent = new WritebackEvent{ cgra->now() + execLatency, this, tsEntry, output };
-    cgra->pushEvent(wbEvent);
+    Cycles timestamp = cgra->now() + execLatency;
+    auto* wbEvent = new WritebackEvent{this, tsEntry, output};
+    cgra->pushEvent(wbEvent, timestamp);
 }
 
 void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
