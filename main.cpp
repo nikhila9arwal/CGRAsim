@@ -32,7 +32,7 @@ int main(){
     params.bases = new int64_t{1};
 
     platy::sim::cgra::FunctionConfiguration functionConf;
-    functionConf.filename = "wunderpus-decompress copy.cfg";
+    functionConf.filename = "wunderpus-decompress_single_PE.cfg";
     functionConf.context = &params;
     functionConf.isMemberFunction = false;
     functionConf.functionPtr = nullptr;
@@ -42,7 +42,7 @@ int main(){
     auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));
 
 
-    platy::sim::cgra::Cgra cgra(/*pes=*/8,/*insts=*/8,/*threads=*/8);
+    platy::sim::cgra::Cgra cgra(/*pes=*/1,/*insts=*/10,/*threads=*/2);
     cgra.configure(functionConf);
     cgra.execute(req);
     

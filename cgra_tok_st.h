@@ -14,14 +14,17 @@ public:
         ~Tag() {}
         InstrMemIdx instIdx; // TODO (nzb): Why Idx vs id ?
         CbIdx cbid; // TODO (nzb): Make TaskIdx instead
-        bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
-            return instIdx == other.instIdx && cbid == other.cbid;
-        }
+        // bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
+        //     return instIdx == other.instIdx && cbid == other.cbid;
+        // }
         bool operator<(const struct Tag& other) const {  // <  ==> > for min heap
-            return int32_t(instIdx) + int32_t(cbid) < int32_t(other.instIdx) + int32_t(other.cbid);
+            if (instIdx  == other.instIdx) return cbid<other.cbid;
+            return instIdx<other.instIdx;
+            // return  int32_t(instIdx) + int32_t(cbid) < int32_t(other.instIdx) + int32_t(other.cbid);
+            // return int32_t(instIdx) < int32_t(other.instIdx) &&  int32_t(cbid) < int32_t(other.cbid);
         }
     };
-    
+ 
     struct Token {
         Token(PosIdx _posid, Word _value, InstrMemIdx _inst, CbIdx _cbid)
             : posid(_posid), value(_value), tag(_inst, _cbid) {}
