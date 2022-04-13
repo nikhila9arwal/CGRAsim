@@ -69,6 +69,7 @@ void ProcessingElement::executeInstruction() {
     // auto tsEntry = tokenStore.getTokenStoreEntry(tag);
     // Cycles timeAcquire = execStage.acquire();
     // qassert(timeAcquire == cgra->now());
+    qassert(!readyQueue.empty());
 
     auto tsEntry = readyQueue.front();
     readyQueue.pop_front();
