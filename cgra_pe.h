@@ -35,7 +35,7 @@ public:
 
     bool isInstructionReady(
         TokenStore::EntryPtr tsEntry, Instruction* inst);
-    void executeInstruction(TokenStore::EntryPtr tsEntry);
+    void executeInstruction();
     void writeback(TokenStore::EntryPtr tsEntry, Word word);
 
     void setStaticParam(Location& loc, Word param) {
@@ -44,7 +44,6 @@ public:
     void loadBitstream(Config& bitstream, std::string key) {
         instructionMemory.loadBitstream(bitstream, key);
     }
-    // void pushFullyImmediateInstructions(CbIdx cbid);
 
 private:
     Port execStage;
@@ -61,19 +60,16 @@ private:
 
     class ExecutionEvent : public CgraEvent {
     public:
-        ExecutionEvent (ProcessingElement* _pe, TokenStore::EntryPtr &_tsEntry)
-            : CgraEvent(), pe(_pe), tsEntry(_tsEntry){}
-        void go() { pe->executeInstruction(tsEntry); }
+        ExecutionEvent (ProcessingElement* _pe)
+            : CgraEvent(), pe(_pe) {}
+        void go() { pe->executeInstruction(); }
 
     private:
         ProcessingElement* pe;
-        TokenStore::EntryPtr tsEntry;
-
     };
 
     class WritebackEvent : public CgraEvent {
     public:
-        //return here;
         WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
             : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
         void go() { pe->writeback(tsEntry, value); }
