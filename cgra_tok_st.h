@@ -14,16 +14,25 @@ public:
         ~Tag() {}
         InstrMemIdx instIdx; // TODO (nzb): Why Idx vs id ?
         CbIdx cbid; // TODO (nzb): Make TaskIdx instead
-        // bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
-        //     return instIdx == other.instIdx && cbid == other.cbid;
-        // }
-        bool operator<(const struct Tag& other) const {  // <  ==> > for min heap
-            if (instIdx  == other.instIdx) return cbid<other.cbid;
-            return instIdx<other.instIdx;
-            // return  int32_t(instIdx) + int32_t(cbid) < int32_t(other.instIdx) + int32_t(other.cbid);
-            // return int32_t(instIdx) < int32_t(other.instIdx) &&  int32_t(cbid) < int32_t(other.cbid);
+        bool operator==(const struct Tag& other) const {  // <  ==> > for min heap
+            return instIdx == other.instIdx && cbid == other.cbid;
         }
+        struct HashFn
+        {
+            std::size_t operator() (const Tag &node) const
+            {
+                std::size_t h1 = std::hash<InstrMemIdx>()(node.instIdx);
+                std::size_t h2 = std::hash<CbIdx>()(node.cbid);
+        
+                return h1 ^ h2;
+            }
+        };
+
     };
+
+    //return here;
+
+
  
     struct Token {
         Token(PosIdx _posid, Word _value, InstrMemIdx _inst, CbIdx _cbid)
@@ -88,7 +97,7 @@ public:
     inline bool isFull() { return tokenStore.size() == capacity; }
 
 private:
-    std::map<Tag, EntryPtr> tokenStore;
+    std::unordered_map<Tag, EntryPtr, Tag::HashFn> tokenStore;
     uint32_t capacity;
 };
 

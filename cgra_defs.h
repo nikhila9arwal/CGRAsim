@@ -4,7 +4,8 @@
 #include <array> 
 #include <queue>
 #include <string>
-#include <map>
+#include <unordered_map>
+#include <bits/stdc++.h>
 #include <stdint.h>
 #include "strong_int.h"
 #include "strong_vec.h"
