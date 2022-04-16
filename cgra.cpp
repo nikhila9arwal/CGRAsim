@@ -76,6 +76,7 @@ void Cgra::tick() {
     while (!eventQueue.empty() && eventQueue.top().first <= currentTime) {
         CgraEvent* event = eventQueue.top().second;
         eventQueue.pop();
+        // event->printInfo();
         event->go();
     }
     // move time forward to the next event

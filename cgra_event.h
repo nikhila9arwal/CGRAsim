@@ -14,6 +14,7 @@ public:
     CgraEvent() {}
 
     virtual void go() = 0;
+    virtual void printInfo() = 0;
 };
 
 struct Cmprtr {

@@ -20,7 +20,7 @@ public:
 
     void release(Cycles occupancy);
 
-    bool empty();
+    bool isAvailable();
 
 private:
     std::deque<Cycles> available;

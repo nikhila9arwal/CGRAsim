@@ -25,6 +25,8 @@ public:
         CbIdx cbid;
     };
 
+    int getId() {return -1;}
+
 private:
     const unsigned runtimeInputsQueueSize = 100;
     std::deque<Input> runtimeInputsQueue;

@@ -39,6 +39,9 @@ private:
             : CgraEvent(), cgra(_cgra), network(_network), src(_src),
               dsts(_dsts), value(_value), cbidx(_cbidx) {}
         void go();
+        void printInfo() {
+            printf("BusEvent at %d, Source = %d \n", int(cgra->now()), src->getId());
+        }
 
     private:
         Cgra* cgra;

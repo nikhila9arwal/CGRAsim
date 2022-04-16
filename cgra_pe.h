@@ -19,9 +19,9 @@ class ProcessingElement : public NetworkPort {
 public:
     ProcessingElement(
         uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)
-        :   execStage(1, _cgra),
-            cgra(_cgra),
+        :   cgra(_cgra),
             selfIdx(_selfIdx),
+            execStage(1, _cgra),
             tokenStore(tokenStoreSize),
             instructionMemory(instructionMemSize),
             execLatency(1),
@@ -31,6 +31,7 @@ public:
     ~ProcessingElement() {}
     
     bool acceptToken(TokenStore::Token tok);
+    int getId() {return int(selfIdx);}
     void acknowledgeToken();
 
     bool isInstructionReady(
@@ -45,10 +46,11 @@ public:
         instructionMemory.loadBitstream(bitstream, key);
     }
 
-private:
-    Port execStage;
+    //TODO (nikhil): Move back to private after done debugging.
     Cgra* cgra;
     PeIdx selfIdx;
+private:
+    Port execStage;
     TokenStore tokenStore;
     InstructionMemory instructionMemory;
 
@@ -56,13 +58,16 @@ private:
     const Cycles frontEndLatency;
 
     const size_t readyQueueCapacity;
-    std::deque<TokenStore::EntryPtr> readyQueue;
+    std::deque<std::pair<TokenStore::EntryPtr, Cycles>> readyQueue;
 
     class ExecutionEvent : public CgraEvent {
     public:
         ExecutionEvent (ProcessingElement* _pe)
             : CgraEvent(), pe(_pe) {}
         void go() { pe->executeInstruction(); }
+        void printInfo() {
+            printf("ExecutionEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+        }
 
     private:
         ProcessingElement* pe;
@@ -73,6 +78,9 @@ private:
         WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
             : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
         void go() { pe->writeback(tsEntry, value); }
+        void printInfo() {
+            printf("WritebackEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+        }
 
     private:
         ProcessingElement* pe;

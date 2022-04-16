@@ -46,7 +46,11 @@ int main(){
     cgra.configure(functionConf);
     cgra.execute(req);
     
+    for (int i =0; i< 1; i++){
     cgra.tick();
+        
+    }
+
 
     args =  (uintptr_t)&(params.data[4]);
     req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));

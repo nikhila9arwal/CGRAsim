@@ -14,7 +14,7 @@ bool InputPort::acceptToken(Word value, std::vector<Location>destinations, CbIdx
     if (runtimeInputsQueueSize == runtimeInputsQueue.size()) {
         return false;
     }
-    if (!inputPort.empty()) {
+    if (inputPort.isAvailable()) {
         inputPort.acquire();
         network->sendToken(this, destinations, value, cbid);
         // Cycles execTime = execStage.acquire() + frontEndLatency;
@@ -31,14 +31,13 @@ bool InputPort::acceptToken(Word value, std::vector<Location>destinations, CbIdx
 //should free the port. if queue not empty send the first token
 //reacquire the port
 void InputPort::acknowledgeToken(){
-    qassert(inputPort.empty());
+    qassert(!inputPort.isAvailable());
 
-    inputPort.release(0_cycles /* exec latency modeled in execute below */);
+    inputPort.release(0_cycles);
     if (!runtimeInputsQueue.empty()) {
         auto input = runtimeInputsQueue.front();
         runtimeInputsQueue.pop_front();
         inputPort.acquire();
-        //TODO (nikhil): pop destinations from somewhere
         network->sendToken(this, input.destinations, input.value, input.cbid);
     }
 }

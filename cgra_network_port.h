@@ -14,6 +14,7 @@ public:
     // arguments would vary between inputPort and Pe
     // virtual bool acceptToken(TokenStore::Token tok) = 0;
     virtual void acknowledgeToken() = 0;
+    virtual int getId() = 0;
 
 };
 

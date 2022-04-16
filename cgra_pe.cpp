@@ -20,16 +20,11 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
     if (isInstructionReady(tokenStoreEntry, instruction)) {
         if(!instruction->isPredicated || tokenStoreEntry->predicate) {
-            readyQueue.push_back(tokenStoreEntry);
-            if (!execStage.empty()) { // TODO (for nzb): reads like execStage isn't doing anything.
-                // TODO (nikhil): Should execStage be acquired here? If we acquire it here we are not using
-                // the time returned by execStage for modelling anything. The time returned by execStage should 
-                // always be cgra->now(). We can't acquire as part of executeInstruction() because
-                // then two instructions can be scheduled for execution if the first one didn't reach 
-                // executeInstruction() and acquire execStage before the second one arrived here.
-                execStage.acquire();
+            readyQueue.push_back(std::pair<TokenStore::EntryPtr, Cycles>(tokenStoreEntry,cgra->now()));
+            if (execStage.isAvailable()) {
+                Cycles execReady = execStage.acquire();
+                Cycles execTime = std::max(cgra->now() + frontEndLatency, execReady);
                 CgraEvent* execEvent = new ExecutionEvent{this};
-                Cycles execTime = cgra->now() + frontEndLatency;
                 cgra->pushEvent(execEvent, execTime);
             }
         }
@@ -39,14 +34,15 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
 }
 
 void ProcessingElement::acknowledgeToken() {
-    qassert(execStage.empty());
+    qassert(!execStage.isAvailable());
 
     execStage.release(0_cycles /* exec latency modeled in execute below */);
 
     if (!readyQueue.empty()) {
-        execStage.acquire();
+        Cycles execReady = execStage.acquire();
+        //has front end latency been paid already V
+        Cycles execTime = std::max(readyQueue.front().second + frontEndLatency, execReady);
         auto* execEvent = new ExecutionEvent{this};
-        Cycles execTime = cgra->now() + frontEndLatency;
         cgra->pushEvent(execEvent, execTime);
     }
 }
@@ -71,13 +67,12 @@ void ProcessingElement::executeInstruction() {
     // qassert(timeAcquire == cgra->now());
     qassert(!readyQueue.empty());
 
-    auto tsEntry = readyQueue.front();
+    auto tsEntry = readyQueue.front().first;
     readyQueue.pop_front();
 
 
     auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
-
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
     Word output = instruction->applyFn(lhs, rhs);
 
