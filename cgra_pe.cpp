@@ -20,10 +20,11 @@ bool ProcessingElement::acceptToken(TokenStore::Token tok) {
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
     if (isInstructionReady(tokenStoreEntry, instruction)) {
         if(!instruction->isPredicated || tokenStoreEntry->predicate) {
-            readyQueue.push_back(std::pair<TokenStore::EntryPtr, Cycles>(tokenStoreEntry,cgra->now()));
+            Cycles frontendReady = cgra->now() + frontEndLatency;
+            readyQueue.push_back(std::pair<TokenStore::EntryPtr, Cycles>(tokenStoreEntry,frontendReady));
             if (execStage.isAvailable()) {
                 Cycles execReady = execStage.acquire();
-                Cycles execTime = std::max(cgra->now() + frontEndLatency, execReady);
+                Cycles execTime = std::max(frontendReady, execReady);
                 CgraEvent* execEvent = new ExecutionEvent{this};
                 cgra->pushEvent(execEvent, execTime);
             }
@@ -39,9 +40,10 @@ void ProcessingElement::acknowledgeToken() {
     execStage.release(0_cycles /* exec latency modeled in execute below */);
 
     if (!readyQueue.empty()) {
+        Cycles frontendReady = readyQueue.front().second;
         Cycles execReady = execStage.acquire();
         //has front end latency been paid already V
-        Cycles execTime = std::max(readyQueue.front().second + frontEndLatency, execReady);
+        Cycles execTime = std::max(frontendReady, execReady);
         auto* execEvent = new ExecutionEvent{this};
         cgra->pushEvent(execEvent, execTime);
     }
