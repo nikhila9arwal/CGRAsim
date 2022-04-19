@@ -30,7 +30,7 @@ void BusNetwork::BusEvent::go() {
         auto dst = dsts.front();
         TokenStore::Token tok{dst.pos, value, dst.inst, cbidx};
         auto* dstPe = cgra->getProcessingElement(dst.pe);
-        dsts.erase(dsts.begin());
+        dsts.pop_front();
         if (!dstPe->acceptToken(tok)) {
             dsts.push_back(dst);
         }

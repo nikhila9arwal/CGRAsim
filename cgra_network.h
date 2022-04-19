@@ -37,7 +37,7 @@ private:
         BusEvent(Cgra* _cgra, BusNetwork* _network, NetworkPort* _src,
                  const std::vector<Location> &_dsts, Word _value, CbIdx _cbidx)
             : CgraEvent(), cgra(_cgra), network(_network), src(_src),
-              dsts(_dsts), value(_value), cbidx(_cbidx) {}
+              dsts(_dsts.begin(), _dsts.end()), value(_value), cbidx(_cbidx) {}
         void go();
         void printInfo() {
             printf("BusEvent at %d, Source = %d \n", int(cgra->now()), src->getId());
@@ -47,7 +47,7 @@ private:
         Cgra* cgra;
         BusNetwork* network;
         NetworkPort* src;
-        std::vector<Location> dsts; // TODO (nzb): This can probably
+        std::deque<Location> dsts; // TODO (nzb): This can probably
                                     // just be source, in a snooping
                                     // implementation
         Word value;
