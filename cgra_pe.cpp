@@ -1,36 +1,73 @@
 
 #include "cgra_pe.h"
 
+/*
+ token comes in
+ frontend acquire
+ frontend event 
+
+ frontend event:
+    release frontend
+    push to rq
+    create exec event and acquire exec if exec free
+
+exec event:
+    pop from rq
+    execute
+    create writeback
+
+writeback event:
+    try to send
+
+
+if send
+    call acknowledge
+        release exec
+        create new exec events if rq not empty
+    
+
+
+
+*/
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-bool ProcessingElement::acceptToken(TokenStore::Token tok) {
-    
-    if (readyQueueCapacity == readyQueue.size()) {
-        return false;
-    }
+bool ProcessingElement::tagMatch(TokenStore::Token tok){
+    // qassert(!tagMatchStage.isAvailable());
+
     auto tokenStoreEntry = tokenStore.acceptToken(tok);
     if (tokenStoreEntry == nullptr) {
         return false;
     }
-
-
     auto instruction = instructionMemory.getInstruction(tok.tag.instIdx);
     if (isInstructionReady(tokenStoreEntry, instruction)) {
         if(!instruction->isPredicated || tokenStoreEntry->predicate) {
-            Cycles frontendReady = cgra->now() + frontEndLatency;
-            readyQueue.push_back(std::pair<TokenStore::EntryPtr, Cycles>(tokenStoreEntry,frontendReady));
+            readyQueue.push_back(tokenStoreEntry);
             if (execStage.isAvailable()) {
-                Cycles execReady = execStage.acquire();
-                Cycles execTime = std::max(frontendReady, execReady);
+                Cycles execTime = execStage.acquire() + execLatency;
                 CgraEvent* execEvent = new ExecutionEvent{this};
                 cgra->pushEvent(execEvent, execTime);
             }
         }
         tokenStore.erase(tok.tag);
     }
+    
+    tagMatchStage.release(0_cycles);
+    return true;
+}
+
+
+bool ProcessingElement::acceptToken(TokenStore::Token tok) {
+    
+    if (readyQueueCapacity == readyQueue.size() || !tagMatchStage.isAvailable()) {
+        return false;
+    }
+
+    Cycles tagMatchTime = tagMatchStage.acquire()+frontEndLatency;
+    CgraEvent* tagMatchEvent = new TagMatchEvent{this, tok};
+    cgra->pushEvent(tagMatchEvent, tagMatchTime);
     return true;
 }
 
@@ -40,10 +77,7 @@ void ProcessingElement::acknowledgeToken() {
     execStage.release(0_cycles /* exec latency modeled in execute below */);
 
     if (!readyQueue.empty()) {
-        Cycles frontendReady = readyQueue.front().second;
-        Cycles execReady = execStage.acquire();
-        //has front end latency been paid already V
-        Cycles execTime = std::max(frontendReady, execReady);
+        Cycles execTime = execStage.acquire() + execLatency;
         auto* execEvent = new ExecutionEvent{this};
         cgra->pushEvent(execEvent, execTime);
     }
@@ -69,7 +103,7 @@ void ProcessingElement::executeInstruction() {
     // qassert(timeAcquire == cgra->now());
     qassert(!readyQueue.empty());
 
-    auto tsEntry = readyQueue.front().first;
+    auto tsEntry = readyQueue.front();
     readyQueue.pop_front();
 
 
@@ -81,7 +115,7 @@ void ProcessingElement::executeInstruction() {
     std::cout<<"PE, Inst, Timestamp, Cbid = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now()<<", "<<tsEntry->tag.cbid;
     std::cout<<"\t Output = "<< output << "\n";
 
-    Cycles timestamp = cgra->now() + execLatency;
+    Cycles timestamp = cgra->now();
     auto* wbEvent = new WritebackEvent{this, tsEntry, output};
     cgra->pushEvent(wbEvent, timestamp);
 }

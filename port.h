@@ -16,6 +16,8 @@ public:
      */
     Cycles grab(Cycles occupancy) ;
 
+    Cycles tryAcquire();
+
     Cycles acquire();
 
     void release(Cycles occupancy);

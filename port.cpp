@@ -18,6 +18,12 @@ Cycles Port::acquire() {
     return time;
 }
 
+Cycles Port::tryAcquire(){
+    if(!isAvailable())
+        return Cycles(-1);
+    return acquire();
+}
+
 void Port::release(Cycles occupancy = 1_cycles) {
     available.push_back(cgra->now() + occupancy);
 }

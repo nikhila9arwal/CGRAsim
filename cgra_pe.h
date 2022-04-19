@@ -21,6 +21,7 @@ public:
         uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)
         :   cgra(_cgra),
             selfIdx(_selfIdx),
+            tagMatchStage(1, _cgra),
             execStage(1, _cgra),
             tokenStore(tokenStoreSize),
             instructionMemory(instructionMemSize),
@@ -45,11 +46,13 @@ public:
     void loadBitstream(Config& bitstream, std::string key) {
         instructionMemory.loadBitstream(bitstream, key);
     }
+    bool tagMatch(TokenStore::Token tok);
 
     //TODO (nikhil): Move back to private after done debugging.
     Cgra* cgra;
     PeIdx selfIdx;
 private:
+    Port tagMatchStage;
     Port execStage;
     TokenStore tokenStore;
     InstructionMemory instructionMemory;
@@ -58,7 +61,23 @@ private:
     const Cycles frontEndLatency;
 
     const size_t readyQueueCapacity;
-    std::deque<std::pair<TokenStore::EntryPtr, Cycles>> readyQueue;
+    std::deque<TokenStore::EntryPtr> readyQueue;
+
+    class TagMatchEvent : public CgraEvent {
+    public:
+        TagMatchEvent (ProcessingElement* _pe, TokenStore::Token _tok)
+            : CgraEvent(), pe(_pe), tok(_tok) {}
+        void go() {
+            pe->tagMatch(tok); 
+        }
+        void printInfo() {
+            printf("TagMatchEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+        }
+
+    private:
+        ProcessingElement* pe;
+        TokenStore::Token tok;
+    };
 
     class ExecutionEvent : public CgraEvent {
     public:
