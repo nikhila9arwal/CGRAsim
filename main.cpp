@@ -9,6 +9,11 @@ struct WunderpusDecompression{
     int64_t* deltas;
     int64_t* bases;
 };
+
+struct simple1{
+    int64_t * param;
+};
+
 int main(){
     
 
@@ -32,7 +37,7 @@ int main(){
     params.bases = new int64_t{1};
 
     platy::sim::cgra::FunctionConfiguration functionConf;
-    functionConf.filename = "wunderpus-decompress_single_PE.cfg";
+    functionConf.filename = "apps/wunderpus-decompress_single_PE.cfg";
     functionConf.context = &params;
     functionConf.isMemberFunction = false;
     functionConf.functionPtr = nullptr;
@@ -46,7 +51,7 @@ int main(){
     cgra.configure(functionConf);
     cgra.execute(req);
     
-    for (int i =0; i< 10; i++){
+    for (int i =0; i< 5; i++){
     cgra.tick();
         
     }
