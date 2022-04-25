@@ -38,7 +38,7 @@ void BusNetwork::BusEvent::go() {
 
     bool retry = !dsts.empty();
     if (retry) {
-        Cycles timestamp = network->bandwidthPort.grab(network->delay);
+        Cycles timestamp = network->bandwidthPort.grab(network->delay, 1_cycles);
         cgra->pushEvent(this, timestamp);
     } else {
         src->acknowledgeToken();

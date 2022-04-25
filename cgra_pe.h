@@ -48,10 +48,10 @@ public:
     }
     bool tagMatch(TokenStore::Token tok);
 
-    //TODO (nikhil): Move back to private after done debugging.
+
+private:
     Cgra* cgra;
     PeIdx selfIdx;
-private:
     Port tagMatchStage;
     Port execStage;
     TokenStore tokenStore;
@@ -71,7 +71,7 @@ private:
             pe->tagMatch(tok); 
         }
         void printInfo() {
-            printf("TagMatchEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+            printf("TagMatchEvent Source = %d \n", int(pe->getId()));
         }
 
     private:
@@ -85,20 +85,19 @@ private:
             : CgraEvent(), pe(_pe) {}
         void go() { pe->executeInstruction(); }
         void printInfo() {
-            printf("ExecutionEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+            printf("ExecutionEvent Source = %d \n", int(pe->getId()));
         }
 
     private:
         ProcessingElement* pe;
     };
-
     class WritebackEvent : public CgraEvent {
     public:
         WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
             : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
         void go() { pe->writeback(tsEntry, value); }
         void printInfo() {
-            printf("WritebackEvent at %d, Source = %d \n", int(pe->cgra->now()), int(pe->selfIdx));
+            printf("WritebackEvent Source = %d \n", int(pe->getId()));
         }
 
     private:

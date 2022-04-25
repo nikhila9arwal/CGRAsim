@@ -115,9 +115,11 @@ void ProcessingElement::executeInstruction() {
     std::cout<<"PE, Inst, Timestamp, Cbid = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now()<<", "<<tsEntry->tag.cbid;
     std::cout<<"\t Output = "<< output << "\n";
 
-    Cycles timestamp = cgra->now();
-    auto* wbEvent = new WritebackEvent{this, tsEntry, output};
-    cgra->pushEvent(wbEvent, timestamp);
+    writeback(tsEntry, output);
+
+    // Cycles timestamp = cgra->now();
+    // auto* wbEvent = new WritebackEvent{this, tsEntry, output};
+    // cgra->pushEvent(wbEvent, timestamp);
 }
 
 void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {

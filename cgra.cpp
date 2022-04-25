@@ -73,10 +73,11 @@ void Cgra::tick() {
 
     // execute until the next time step
     // pq elements are pair<Cycles, Event*>
+    printf("\n\n------------------------------Cycle%d------------------------------\n\n",int(now()));
     while (!eventQueue.empty() && eventQueue.top().first <= currentTime) {
         CgraEvent* event = eventQueue.top().second;
         eventQueue.pop();
-        // event->printInfo();
+        event->printInfo();
         event->go();
     }
     // move time forward to the next event

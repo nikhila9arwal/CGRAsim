@@ -40,7 +40,7 @@ private:
               dsts(_dsts.begin(), _dsts.end()), value(_value), cbidx(_cbidx) {}
         void go();
         void printInfo() {
-            printf("BusEvent at %d, Source = %d \n", int(cgra->now()), src->getId());
+            printf("BusEvent Source = %d \n", src->getId());
         }
 
     private:

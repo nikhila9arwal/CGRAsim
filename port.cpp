@@ -5,16 +5,17 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
-Cycles Port::grab(Cycles occupancy = 1_cycles) {
-    auto time = acquire();
-    release(occupancy);
+Cycles Port::grab(Cycles occupancy, Cycles acquireDelay) {
+    auto time = acquire(acquireDelay);
+    release(time - cgra->now() + occupancy); // release occupancy cycles after acquireTime
     return time;
 }
 
-Cycles Port::acquire() {
+
+Cycles Port::acquire(Cycles acquireDelay) {
     qassert(isAvailable());
-    auto time = std::max(cgra->now() /* TODO (nzb): How to get this??? */, available.front());
-    available.pop_front();
+    auto time = std::max(cgra->now() + acquireDelay/* TODO (nzb): How to get this??? */, available.top());
+    available.pop();
     return time;
 }
 
@@ -24,8 +25,8 @@ Cycles Port::tryAcquire(){
     return acquire();
 }
 
-void Port::release(Cycles occupancy = 1_cycles) {
-    available.push_back(cgra->now() + occupancy);
+void Port::release(Cycles occupancy) {
+    available.push(cgra->now() + occupancy);
 }
 
 bool Port::isAvailable() {
