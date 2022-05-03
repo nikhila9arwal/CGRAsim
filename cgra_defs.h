@@ -38,14 +38,15 @@ namespace cgra {
 
 struct VirtualAddr{
 // public:
-    // VirtualAddr(ConfIdx _confidx, PeIdx _peidx, InstrMemIdx _instidx) : confidx(_confidx), peidx(_peidx), instidx(_instidx) {}
+    VirtualAddr(ConfIdx _confidx, PeIdx _peidx, InstrMemIdx _instidx) : confidx(_confidx), peidx(_peidx), instidx(_instidx) {}
+
     ConfIdx confidx;
     PeIdx peidx;
     InstrMemIdx instidx; 
 
-    struct HashFn{
+    struct HashFn {
         std::size_t operator() (const VirtualAddr &node) const;
-    };   
+    };
 };
 
 struct PhysicalAddr{
