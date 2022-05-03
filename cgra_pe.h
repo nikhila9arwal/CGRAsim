@@ -24,7 +24,7 @@ public:
             tagMatchStage(1, _cgra),
             execStage(1, _cgra),
             tokenStore(tokenStoreSize),
-            instructionMemory(instructionMemSize),
+            instructionMemory(_cgra, this, instructionMemSize),
             execLatency(1),
             frontEndLatency(1),
             readyQueueCapacity(100) {}
@@ -32,7 +32,7 @@ public:
     ~ProcessingElement() {}
     
     bool acceptToken(TokenStore::Token tok);
-    int getId() {return int(selfIdx);}
+    int getId();
     void acknowledgeToken();
 
     bool isInstructionReady(

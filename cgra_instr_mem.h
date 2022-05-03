@@ -8,9 +8,12 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
+class ProcessingElement;
+class Cgra;
+
 class InstructionMemory {
 public:
-    InstructionMemory(uint32_t size);
+    InstructionMemory(Cgra *_cgra, ProcessingElement * _pe, uint32_t size);
     ~InstructionMemory() {}
     void setStaticParam(Location& loc, Word param) {
         instructionMemory[loc.inst].setStaticParam(loc, param);
@@ -20,6 +23,8 @@ public:
     InstrMemIdx size() { return instructionMemory.size(); }
 
 private:
+    Cgra *cgra;
+    ProcessingElement * pe;
     StrongVec<InstrMemIdx, Instruction> instructionMemory;
 };
 

@@ -15,8 +15,8 @@ Cgra::Cgra(
     // EngineIdx _engIdx,
     uint32_t _numPes,
     uint32_t _numInstrsPerPE, 
-    uint32_t _numThrds)
-    {//: Engine(name, tile, _engIdx) {
+    uint32_t _numThrds) {   //: Engine(name, tile, _engIdx) {
+    
     cbidx = 0_cbid;
     for (PeIdx p = 0_peid; p < (PeIdx)_numPes; p++) {
         processingElements.push_back(
@@ -26,6 +26,10 @@ Cgra::Cgra(
     inputPort = new InputPort(this, network);
     //Not sure about this
     currentTime = 0_cycles;
+
+    std::unordered_set<InstrMemIdx> freeInsts;
+    for (InstrMemIdx i=0_instid; i<InstrMemIdx(_numInstrsPerPE); i++) {freeInsts.insert(i);}
+    instFreeList.insert(instFreeList.end(), PeIdx(_numPes), freeInsts);
 }
 
 void Cgra::pushEvent(CgraEvent* event, Cycles timestamp){
@@ -36,14 +40,36 @@ Network* Cgra::getNetwork(){
     return network;
 }
 
+void Cgra::scheduler(Config& bitstream){
+
+    for (PeIdx i = 0_peid;; i++) {
+        std::string peKey = qformat("pe_{}", i);
+        if (!bitstream.exists(peKey)) { break; }
+        qassert(i<processingElements.size());
+        for (InstrMemIdx j = 0_instid;; j++) {
+            std::string instKey = peKey + qformat(".inst_{}", j);
+            if(!bitstream.exists(instKey)) { break; }
+            qassert(!instFreeList[i].empty());
+            auto firstFreeInst = instFreeList[i].begin();
+            vTable[VirtualAddr{confidx, i, j}] = PhysicalAddr{i, *firstFreeInst};
+            instFreeList[i].erase(firstFreeInst);
+        }
+    }
+}
+
+
 // TODO (nikhil): Change wunderpus decompression cfg to have params
-void Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
+ConfIdx Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
     // Config conf(functionConf.filename.c_str());
     Config conf(functionConf.filename.c_str());
+    //cbid = scheduler(conf);
+    //
+    scheduler(conf);
     loadBitstream(conf);
     // loadStaticParams(conf, functionConf.context);
     loadStaticParams(conf, functionConf.context);
     loadInputMap(conf);
+    return confidx++;
 }
 
 void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req) {
@@ -62,7 +88,10 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
     //     std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
     // }
     Word* runtimeInputs = (Word*)req->args;
+    cbTable[cbidx] = req->confIdx;
+
     loadRuntimeInputs(runtimeInputs);
+
     cbidx = cbidx + 1_cbid;
 }
 
@@ -110,12 +139,16 @@ void Cgra::loadStaticParams(Config& bitstream, void* context) {
             std::string paramDestKey = paramKey + qformat(".dest_{}", j);
             if(!bitstream.exists(paramDestKey)) break;
             auto loc = Location(bitstream, paramDestKey);
+            auto pAddr = getPAddr(VirtualAddr{confidx, loc.pe, loc.inst});
+            loc.pe = pAddr.peidx;
+            loc.inst = pAddr.instidx;
             processingElements[loc.pe]->setStaticParam(loc, param);
         }
     }
 }
 
 void Cgra::loadInputMap(Config& bitstream) {
+    std::vector<std::vector<Location>> confInputDestinationMap;
     for (int i = 0;; i++) {
         std::string inputKey = qformat("input_{}", i);
         if (!bitstream.exists(inputKey)) {
@@ -126,18 +159,22 @@ void Cgra::loadInputMap(Config& bitstream) {
             std::string destInputKey = inputKey + qformat(".dest_{}", j);
             if (bitstream.exists(destInputKey)) {
                 auto loc = Location(bitstream, destInputKey);
+                auto pAddr = getPAddr(VirtualAddr{confidx, loc.pe, loc.inst});
+                loc.pe = pAddr.peidx;
+                loc.inst = pAddr.instidx;
                 destInput.push_back(loc);
             } else {
-                inputDestinationMap.push_back(destInput);
+                confInputDestinationMap.push_back(destInput);
                 break;
             }
         }
     }
+    inputDestinationMap[cbTable[cbidx]] = confInputDestinationMap;
 }
 
 // TODO (nikhil): change name to launch new thread return thread id
 void Cgra::loadRuntimeInputs(Word* inputs) {
-    for (auto destinations : inputDestinationMap) {
+    for (auto destinations : inputDestinationMap[cbTable[cbidx]]) {
 
         inputPort->acceptToken(*inputs, destinations, cbidx);
         inputs++;

@@ -34,6 +34,9 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
+int ProcessingElement::getId() {return int(selfIdx);}
+
+
 bool ProcessingElement::tagMatch(TokenStore::Token tok){
     // qassert(!tagMatchStage.isAvailable());
 

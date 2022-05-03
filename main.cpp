@@ -44,11 +44,13 @@ int main(){
 
     uintptr_t args =  (uintptr_t)&(params.data[1]);
 
-    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));
 
 
     platy::sim::cgra::Cgra cgra(/*pes=*/1,/*insts=*/10,/*threads=*/2);
-    cgra.configure(functionConf);
+    auto confId = cgra.configure(functionConf);
+
+    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args), confId);
+
     cgra.execute(req);
     
     for (int i =0; i< 5; i++){
@@ -58,7 +60,7 @@ int main(){
 
 
     args =  (uintptr_t)&(params.data[4]);
-    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args));
+    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args), confId);
 
     cgra.execute(req);
 

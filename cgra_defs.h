@@ -28,12 +28,30 @@ DERIVE_STRONGER_INT(ThreadIdx, int32_t, tid);
 DERIVE_STRONGER_INT(PeIdx, int32_t, peid)
 DERIVE_STRONGER_INT(OpIdx, int32_t, opid)
 DERIVE_STRONGER_INT(CbIdx, int32_t, cbid)
+DERIVE_STRONGER_INT(ConfIdx, int32_t, confid)
 DERIVE_STRONGER_INT(InstrMemIdx, int32_t, instid)
 DERIVE_STRONGER_INT(TokenStIdx, int32_t, tokenstid)
 
 namespace platy {
 namespace sim {
 namespace cgra {
+
+struct VirtualAddr{
+// public:
+    // VirtualAddr(ConfIdx _confidx, PeIdx _peidx, InstrMemIdx _instidx) : confidx(_confidx), peidx(_peidx), instidx(_instidx) {}
+    ConfIdx confidx;
+    PeIdx peidx;
+    InstrMemIdx instidx; 
+
+    struct HashFn{
+        std::size_t operator() (const VirtualAddr &node) const;
+    };   
+};
+
+struct PhysicalAddr{
+    PeIdx peidx;
+    InstrMemIdx instidx;
+};
 
 enum PosIdx { LHS, RHS, PREDICATE };
 enum InstType {
@@ -97,8 +115,9 @@ public:
         const ThreadIdx _tid,
         void* _task,
         const uint64_t* const _args,
-        const uint32_t _argBytes)
-        : pid(_pid), tid(_tid), task(_task), argBytes(_argBytes) {//,cv(nullptr) {
+        const uint32_t _argBytes,
+        const ConfIdx _confIdx)
+        : pid(_pid), tid(_tid), task(_task), argBytes(_argBytes), confIdx(_confIdx) {//,cv(nullptr) {
         memcpy(args, _args, argBytes);
     }
 
@@ -131,6 +150,8 @@ public:
 
     // TODO (nikhil): This condition variable is notified when the task completes.
     // ConditionVariable* cv;
+
+    ConfIdx confIdx;
 };
 
 }  // namespace cgra
