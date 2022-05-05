@@ -36,20 +36,23 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
-struct VirtualAddr{
+struct VirtualInstAddr{
 // public:
-    VirtualAddr(ConfIdx _confidx, PeIdx _peidx, InstrMemIdx _instidx) : confidx(_confidx), peidx(_peidx), instidx(_instidx) {}
+    VirtualInstAddr(void* _functionPtr, PeIdx _peidx, InstrMemIdx _instidx) : functionPtr(_functionPtr), peidx(_peidx), instidx(_instidx) {}
 
-    ConfIdx confidx;
+    bool operator==(const struct VirtualInstAddr& other) const {  // <  ==> > for min heap
+        return functionPtr == other.functionPtr && peidx == other.peidx && instidx == other.instidx;
+    }
+    void* functionPtr;
     PeIdx peidx;
     InstrMemIdx instidx; 
 
     struct HashFn {
-        std::size_t operator() (const VirtualAddr &node) const;
+        std::size_t operator() (const VirtualInstAddr &node) const;
     };
 };
 
-struct PhysicalAddr{
+struct PhysicalInstAddr{
     PeIdx peidx;
     InstrMemIdx instidx;
 };
@@ -116,9 +119,8 @@ public:
         const ThreadIdx _tid,
         void* _task,
         const uint64_t* const _args,
-        const uint32_t _argBytes,
-        const ConfIdx _confIdx)
-        : pid(_pid), tid(_tid), task(_task), argBytes(_argBytes), confIdx(_confIdx) {//,cv(nullptr) {
+        const uint32_t _argBytes)
+        : pid(_pid), tid(_tid), task(_task), argBytes(_argBytes){//,cv(nullptr) {
         memcpy(args, _args, argBytes);
     }
 
@@ -151,8 +153,6 @@ public:
 
     // TODO (nikhil): This condition variable is notified when the task completes.
     // ConditionVariable* cv;
-
-    ConfIdx confIdx;
 };
 
 }  // namespace cgra

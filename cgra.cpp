@@ -29,7 +29,9 @@ Cgra::Cgra(
 
     std::unordered_set<InstrMemIdx> freeInsts;
     for (InstrMemIdx i=0_instid; i<InstrMemIdx(_numInstrsPerPE); i++) {freeInsts.insert(i);}
-    instFreeList.insert(instFreeList.end(), PeIdx(_numPes), freeInsts);
+    instFreeList.insert(instFreeList.end(), PeIdx(_numPes), *new std::unordered_set<InstrMemIdx>(freeInsts));
+    cout<<instFreeList[0_peid].size()<<"\n";
+
 }
 
 void Cgra::pushEvent(CgraEvent* event, Cycles timestamp){
@@ -40,7 +42,7 @@ Network* Cgra::getNetwork(){
     return network;
 }
 
-void Cgra::scheduler(Config& bitstream){
+void Cgra::instAllocator(Config& bitstream, void* functionPtr){
 
     for (PeIdx i = 0_peid;; i++) {
         std::string peKey = qformat("pe_{}", i);
@@ -51,7 +53,7 @@ void Cgra::scheduler(Config& bitstream){
             if(!bitstream.exists(instKey)) { break; }
             qassert(!instFreeList[i].empty());
             auto firstFreeInst = instFreeList[i].begin();
-            vTable[VirtualAddr{confidx, i, j}] = PhysicalAddr{i, *firstFreeInst};
+            vTable[VirtualInstAddr{functionPtr, i, j}] = PhysicalInstAddr{i, *firstFreeInst};
             instFreeList[i].erase(firstFreeInst);
         }
     }
@@ -59,17 +61,16 @@ void Cgra::scheduler(Config& bitstream){
 
 
 // TODO (nikhil): Change wunderpus decompression cfg to have params
-ConfIdx Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
+void Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
     // Config conf(functionConf.filename.c_str());
     Config conf(functionConf.filename.c_str());
     //cbid = scheduler(conf);
     //
-    scheduler(conf);
-    loadBitstream(conf);
+    instAllocator(conf, functionConf.functionPtr);
+    loadBitstream(conf, functionConf.functionPtr);
     // loadStaticParams(conf, functionConf.context);
-    loadStaticParams(conf, functionConf.context);
-    loadInputMap(conf);
-    return confidx++;
+    loadStaticParams(conf, functionConf.context, functionConf.functionPtr);
+    loadInputMap(conf, functionConf.functionPtr);
 }
 
 void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req) {
@@ -88,7 +89,7 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
     //     std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
     // }
     Word* runtimeInputs = (Word*)req->args;
-    cbTable[cbidx] = req->confIdx;
+    cbTable[cbidx] = req->task;
 
     loadRuntimeInputs(runtimeInputs);
 
@@ -113,21 +114,21 @@ void Cgra::tick() {
     currentTime = eventQueue.top().first; // corresponds to time on top of queue.
 }
 
-void Cgra::loadBitstream(Config& bitstream) {
+void Cgra::loadBitstream(Config& bitstream, void* functionPtr) {
     for (PeIdx i = 0_peid;; i++) {
         std::string configKey = qformat("pe_{}", i);
         if (!bitstream.exists(configKey)) {
             break;
         }
         qassert(i < processingElements.size());
-        processingElements[i]->loadBitstream(bitstream, configKey);
+        processingElements[i]->loadBitstream(bitstream, configKey, functionPtr);
     }
 }
 
 // 1.) Extract params offsets and
 // 2.) Fetch params from context+offset
 // 3.) Place them as as directed config destinations
-void Cgra::loadStaticParams(Config& bitstream, void* context) {
+void Cgra::loadStaticParams(Config& bitstream, void* context, void* functionPtr ) {
     for (int i = 0;; i++) {
         std::string paramKey = qformat("param_{}", i);
         if (!bitstream.exists(paramKey)) {
@@ -139,7 +140,7 @@ void Cgra::loadStaticParams(Config& bitstream, void* context) {
             std::string paramDestKey = paramKey + qformat(".dest_{}", j);
             if(!bitstream.exists(paramDestKey)) break;
             auto loc = Location(bitstream, paramDestKey);
-            auto pAddr = getPAddr(VirtualAddr{confidx, loc.pe, loc.inst});
+            auto pAddr = translateVirtualInstAddr(VirtualInstAddr{functionPtr, loc.pe, loc.inst});
             loc.pe = pAddr.peidx;
             loc.inst = pAddr.instidx;
             processingElements[loc.pe]->setStaticParam(loc, param);
@@ -147,7 +148,7 @@ void Cgra::loadStaticParams(Config& bitstream, void* context) {
     }
 }
 
-void Cgra::loadInputMap(Config& bitstream) {
+void Cgra::loadInputMap(Config& bitstream, void* functionPtr) {
     std::vector<std::vector<Location>> confInputDestinationMap;
     for (int i = 0;; i++) {
         std::string inputKey = qformat("input_{}", i);
@@ -159,7 +160,7 @@ void Cgra::loadInputMap(Config& bitstream) {
             std::string destInputKey = inputKey + qformat(".dest_{}", j);
             if (bitstream.exists(destInputKey)) {
                 auto loc = Location(bitstream, destInputKey);
-                auto pAddr = getPAddr(VirtualAddr{confidx, loc.pe, loc.inst});
+                auto pAddr = translateVirtualInstAddr(VirtualInstAddr{functionPtr, loc.pe, loc.inst});
                 loc.pe = pAddr.peidx;
                 loc.inst = pAddr.instidx;
                 destInput.push_back(loc);

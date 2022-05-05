@@ -40,16 +40,16 @@ int main(){
     functionConf.filename = "apps/wunderpus-decompress_single_PE.cfg";
     functionConf.context = &params;
     functionConf.isMemberFunction = false;
-    functionConf.functionPtr = nullptr;
+    functionConf.functionPtr = &functionConf.filename;
 
     uintptr_t args =  (uintptr_t)&(params.data[1]);
 
 
 
     platy::sim::cgra::Cgra cgra(/*pes=*/1,/*insts=*/10,/*threads=*/2);
-    auto confId = cgra.configure(functionConf);
+    cgra.configure(functionConf);
 
-    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args), confId);
+    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConf.filename, &args, sizeof(args));
 
     cgra.execute(req);
     
@@ -60,7 +60,7 @@ int main(){
 
 
     args =  (uintptr_t)&(params.data[4]);
-    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, &args, sizeof(args), confId);
+    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConf.filename, &args, sizeof(args));
 
     cgra.execute(req);
 

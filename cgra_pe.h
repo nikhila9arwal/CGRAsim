@@ -43,8 +43,8 @@ public:
     void setStaticParam(Location& loc, Word param) {
         instructionMemory.setStaticParam(loc, param);
     }
-    void loadBitstream(Config& bitstream, std::string key) {
-        instructionMemory.loadBitstream(bitstream, key);
+    void loadBitstream(Config& bitstream, std::string key, void* functionPtr) {
+        instructionMemory.loadBitstream(bitstream, key, functionPtr);
     }
     bool tagMatch(TokenStore::Token tok);
 

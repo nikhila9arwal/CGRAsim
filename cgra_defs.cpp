@@ -19,9 +19,9 @@ void Location::loadBitstream(Config& bitstream, std::string key) {
     pos = (PosIdx)bitstream.get<int32_t>(key + ".pos");
 }
 
-std::size_t VirtualAddr::HashFn::operator() (const VirtualAddr &node) const
+std::size_t VirtualInstAddr::HashFn::operator() (const VirtualInstAddr &node) const
 {
-    std::size_t h1 = std::hash<ConfIdx>()(node.confidx);
+    std::size_t h1 = std::hash<void*>()(node.functionPtr);
     std::size_t h2 = std::hash<PeIdx>()(node.peidx);
     std::size_t h3 = std::hash<InstrMemIdx>()(node.instidx);
     return (h1 ^ h2 ^ h3);

@@ -29,7 +29,7 @@ public:
     // void setCaches(BaseCache* _l1i, BaseCache* _l1d) : l1i(_l1i), l1d(_l1d) {;}
     // BaseCache* getL1d() { return l1d; }
     // void configure(const FunctionConfiguration& functionConf);
-    ConfIdx configure(const FunctionConfiguration& functionConf);
+    void configure(const FunctionConfiguration& functionConf);
     // void unconfigure(void* funcPtr) {}
     // void execute(std::shared_ptr<TaskReq> req);
 
@@ -50,13 +50,13 @@ public:
         return const_cast<Cgra*>(this)->getProcessingElement(peid);     
     }
 
-    StrongVec<PeIdx, std::unordered_set<InstrMemIdx>>& getInstFreeList() {return instFreeList;}
+    StrongVec<PeIdx, std::unordered_set<InstrMemIdx>>& getInstFreeList() { cout<< instFreeList[0_peid].size()<<"\n"; return instFreeList;}
 
     Network* getNetwork();
 
-    PhysicalAddr getPAddr (VirtualAddr vAddr) { return vTable[vAddr] ;}
+    PhysicalInstAddr translateVirtualInstAddr (VirtualInstAddr vAddr) { return vTable[vAddr] ;}
 
-    ConfIdx getConfidx() {return confidx;}
+    // ConfIdx getConfidx() {return confidx;}
 
 private:
     Cycles currentTime;
@@ -65,21 +65,21 @@ private:
     // BaseCache* l1d;
     std::priority_queue<std::pair<Cycles, CgraEvent*>, 
         std::vector<std::pair<Cycles, CgraEvent*>>, Cmprtr> eventQueue;
-    std::unordered_map<VirtualAddr, PhysicalAddr, VirtualAddr::HashFn> vTable;
-    std::unordered_map<CbIdx, ConfIdx> cbTable;
+    std::unordered_map<VirtualInstAddr, PhysicalInstAddr, VirtualInstAddr::HashFn> vTable;
+    std::unordered_map<CbIdx, void*> cbTable;
     CbIdx cbidx;
-    ConfIdx confidx;
+    // ConfIdx confidx;
     Network* network;
     StrongVec<PeIdx, ProcessingElement*> processingElements;
-    std::unordered_map<ConfIdx, std::vector<std::vector<Location>>> inputDestinationMap;
+    std::unordered_map<void*, std::vector<std::vector<Location>>> inputDestinationMap;
     StrongVec<PeIdx, std::unordered_set<InstrMemIdx>> instFreeList;
     InputPort* inputPort;
 
-    void loadBitstream(Config& bitstream);
-    void loadStaticParams(Config& bitstream, void* context);
-    void loadInputMap(Config& bitstream);
+    void loadBitstream(Config& bitstream, void* functionPtr);
+    void loadStaticParams(Config& bitstream, void* context, void* functionPtr);
+    void loadInputMap(Config& bitstream, void* functionPtr);
     void loadRuntimeInputs(Word* inputs);
-    void scheduler(Config& bitstream);
+    void instAllocator(Config& bitstream, void* functionPtr);
 };
 
 }  // namespace cgra

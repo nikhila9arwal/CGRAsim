@@ -18,7 +18,7 @@ public:
     void setStaticParam(Location& loc, Word param) {
         instructionMemory[loc.inst].setStaticParam(loc, param);
     }
-    void loadBitstream(Config& bitstream, std::string key);
+    void loadBitstream(Config& bitstream, std::string key, void* functionPtr);
     Instruction* getInstruction(InstrMemIdx idx) { return &instructionMemory[idx]; }
     InstrMemIdx size() { return instructionMemory.size(); }
 
