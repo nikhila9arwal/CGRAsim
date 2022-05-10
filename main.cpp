@@ -10,57 +10,56 @@ struct WunderpusDecompression{
     int64_t* bases;
 };
 
-struct simple1{
+struct Simple1{
     int64_t * param;
 };
 
 int main(){
     
 
-    // Word inputs1[4] = {(Word)data,(Word)data,(Word)deltas,(Word)bases};
-    // Word inputs2[4] = {(Word)&data[1],(Word)data,(Word)deltas,(Word)bases};
-
-    // cgra::CGRACore core(8,8,8);
-    // core.loadBitstream("wunderpus-decompress.cfg"); //TODO: also take in dynamically determined arguments like deltas and bases instead of making them part of inputs.
-    // core.loadInputs(inputs1);
-    // core.loadInputs(inputs2);
-    // core.execute();
-
-
-    // std::cout<<data[0]<<"\n";
-    // std::cout<<data[1]<<"\n";
-    // return 0;
-
     WunderpusDecompression params;
     params.data = new int64_t[8];
     params.deltas = new int64_t[8] {31,15,31,15,0x5f,15,31,15};
     params.bases = new int64_t{1};
 
-    platy::sim::cgra::FunctionConfiguration functionConf;
-    functionConf.filename = "apps/wunderpus-decompress_single_PE.cfg";
-    functionConf.context = &params;
-    functionConf.isMemberFunction = false;
-    functionConf.functionPtr = &functionConf.filename;
+    platy::sim::cgra::FunctionConfiguration functionConfWunderpus;
+    functionConfWunderpus.filename = "apps/wunderpus-decompress_single_PE.cfg";
+    functionConfWunderpus.context = &params;
+    functionConfWunderpus.isMemberFunction = false;
+    functionConfWunderpus.functionPtr = &functionConfWunderpus.filename;
 
     uintptr_t args =  (uintptr_t)&(params.data[1]);
 
 
+    Simple1 simpleParams;
+    simpleParams.param =  new int64_t {4};
+    platy::sim::cgra::FunctionConfiguration functionConfSimple1;
+    functionConfSimple1.filename = "apps/simple1_single_pe.cfg";
+    functionConfSimple1.context =  &simpleParams;
+    functionConfSimple1.isMemberFunction = false;
+    functionConfSimple1.functionPtr = &functionConfSimple1.filename;
+    const uint64_t* simpleInput = new uint64_t[2] {2,0};
 
-    platy::sim::cgra::Cgra cgra(/*pes=*/1,/*insts=*/10,/*threads=*/2);
-    cgra.configure(functionConf);
 
-    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConf.filename, &args, sizeof(args));
 
+    platy::sim::cgra::Cgra cgra(/*pes=*/1,/*insts=*/16,/*threads=*/4);
+    cgra.configure(functionConfWunderpus);
+    cgra.configure(functionConfSimple1);
+
+    auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConfWunderpus.filename, &args, sizeof(args));
     cgra.execute(req);
+
+
+    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConfSimple1.filename, simpleInput, 2*sizeof(uint64_t));
+    cgra.execute(req);
+
     
     for (int i =0; i< 5; i++){
-    cgra.tick();
-        
+        cgra.tick();   
     }
 
-
     args =  (uintptr_t)&(params.data[4]);
-    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConf.filename, &args, sizeof(args));
+    req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, &functionConfWunderpus.filename, &args, sizeof(args));
 
     cgra.execute(req);
 
@@ -73,35 +72,8 @@ int main(){
     }
     std::cout<<"x"<<std::hex<<params.data[1]<<"\n";
     std::cout<<"x"<<std::hex<<params.data[4]<<"\n";
+    std::cout<<*simpleParams.param<<"\n";
 
     
     return 0;
-    // platy::sim::cgra::FunctionConfiguration functionConf;
-    // functionConf.filename = "outdataflow_copy.cfg";
-    // functionConf.context = nullptr;
-    // functionConf.isMemberFunction = false;
-    // functionConf.functionPtr = nullptr;
-
-    // uint64_t* args = new uint64_t[3];
-    // uint32_t argBytes = sizeof(uint64_t)*3;
-    // args[0] = 2;
-    // args[1] = 3;
-    // args[2] = 4;
-    // auto req = std::make_shared<platy::sim::cgra::TaskReq>(0_pid, 0_tid, nullptr, args, argBytes);
-
-
-
-    // platy::sim::cgra::Cgra cgra(4,4,4);
-    // cgra.configure(functionConf);
-    // cgra.execute(req);
-
-    // try {
-    //     while (true) {
-    //         cgra.tick();
-    //     }
-    // } catch (platy::sim::cgra::Cgra::OutOfEvents e) {
-    //     // nothing
-    // }
-    
-    // return 0;
 }

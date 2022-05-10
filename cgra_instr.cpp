@@ -1,4 +1,5 @@
 #include "cgra_instr.h"
+#include "cgra.h"
 
 namespace platy {
 namespace sim {
@@ -12,14 +13,10 @@ Instruction::Instruction()
       rhsImm{} {
 }
 
-Instruction::Instruction(Config& config, std::string key) {
-    loadBitstream(config, key);
-}
-
 Instruction::~Instruction() {
 }
 
-void Instruction::loadBitstream(Config& bitstream, std::string key) {
+void Instruction::loadBitstream(Config& bitstream, std::string key, void* functionPtr, Cgra* cgra) {
     std::string type = bitstream.get<const char*>(key + ".type", "");
     qassert(type != "");
     decode(type);
@@ -39,7 +36,11 @@ void Instruction::loadBitstream(Config& bitstream, std::string key) {
     }
     for (int i = 0;; i++) {
         if (bitstream.exists(key + qformat(".dest_{}", i))) {
-            destinations.push_back(Location(bitstream, key + qformat(".dest_{}", i)));
+            Location destination(bitstream, key + qformat(".dest_{}", i));
+            PhysicalInstAddr paddr = cgra->translateVirtualInstAddr(VirtualInstAddr{functionPtr, destination.pe, destination.inst});
+            destination.pe = paddr.peidx;
+            destination.inst = paddr.instidx;
+            destinations.push_back(destination);
         } else {
             break;
         }

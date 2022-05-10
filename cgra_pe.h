@@ -24,7 +24,7 @@ public:
             tagMatchStage(1, _cgra),
             execStage(1, _cgra),
             tokenStore(tokenStoreSize),
-            instructionMemory(_cgra, this, instructionMemSize),
+            instructionMemory(this, instructionMemSize),
             execLatency(1),
             frontEndLatency(1),
             readyQueueCapacity(100) {}
@@ -44,7 +44,7 @@ public:
         instructionMemory.setStaticParam(loc, param);
     }
     void loadBitstream(Config& bitstream, std::string key, void* functionPtr) {
-        instructionMemory.loadBitstream(bitstream, key, functionPtr);
+        instructionMemory.loadBitstream(bitstream, key, functionPtr, cgra);
     }
     bool tagMatch(TokenStore::Token tok);
 

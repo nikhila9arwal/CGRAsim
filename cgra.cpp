@@ -29,8 +29,8 @@ Cgra::Cgra(
 
     std::unordered_set<InstrMemIdx> freeInsts;
     for (InstrMemIdx i=0_instid; i<InstrMemIdx(_numInstrsPerPE); i++) {freeInsts.insert(i);}
-    instFreeList.insert(instFreeList.end(), PeIdx(_numPes), *new std::unordered_set<InstrMemIdx>(freeInsts));
-    cout<<instFreeList[0_peid].size()<<"\n";
+    instFreeList.insert(instFreeList.end(), PeIdx(_numPes), std::unordered_set<InstrMemIdx>(freeInsts));
+    // cout<<instFreeList[0_peid].size()<<"\n";
 
 }
 
@@ -170,7 +170,7 @@ void Cgra::loadInputMap(Config& bitstream, void* functionPtr) {
             }
         }
     }
-    inputDestinationMap[cbTable[cbidx]] = confInputDestinationMap;
+    inputDestinationMap[functionPtr] = confInputDestinationMap;
 }
 
 // TODO (nikhil): change name to launch new thread return thread id
