@@ -19,6 +19,11 @@ void Location::loadBitstream(Config& bitstream, std::string key) {
     pos = (PosIdx)bitstream.get<int32_t>(key + ".pos");
 }
 
+VirtualInstAddr::VirtualInstAddr(void* _functionPtr, PeIdx _peidx, InstrMemIdx _instidx) 
+    : functionPtr(_functionPtr), peidx(_peidx), instidx(_instidx) {}
+bool VirtualInstAddr::operator==(const struct VirtualInstAddr& other) const {  // <  ==> > for min heap
+    return functionPtr == other.functionPtr && peidx == other.peidx && instidx == other.instidx;
+}
 std::size_t VirtualInstAddr::HashFn::operator() (const VirtualInstAddr &node) const
 {
     std::size_t h1 = std::hash<void*>()(node.functionPtr);

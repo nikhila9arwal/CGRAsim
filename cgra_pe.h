@@ -18,34 +18,17 @@ namespace cgra {
 class ProcessingElement : public NetworkPort {
 public:
     ProcessingElement(
-        uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)
-        :   cgra(_cgra),
-            selfIdx(_selfIdx),
-            tagMatchStage(1, _cgra),
-            execStage(1, _cgra),
-            tokenStore(tokenStoreSize),
-            instructionMemory(this, instructionMemSize),
-            execLatency(1),
-            frontEndLatency(1),
-            readyQueueCapacity(100) {}
-
+        uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra);
     ~ProcessingElement() {}
-    
     bool acceptToken(TokenStore::Token tok);
-    int getId();
-    void acknowledgeToken();
-
+    int getId() override;
+    void acknowledgeToken() override;
     bool isInstructionReady(
         TokenStore::EntryPtr tsEntry, Instruction* inst);
     void executeInstruction();
     void writeback(TokenStore::EntryPtr tsEntry, Word word);
-
-    void setStaticParam(Location& loc, Word param) {
-        instructionMemory.setStaticParam(loc, param);
-    }
-    void loadBitstream(Config& bitstream, std::string key, void* functionPtr) {
-        instructionMemory.loadBitstream(bitstream, key, functionPtr, cgra);
-    }
+    void setStaticParam(Location& loc, Word param);
+    void loadBitstream(Config& bitstream, std::string key, void* functionPtr);
     bool tagMatch(TokenStore::Token tok);
 
 
@@ -65,15 +48,9 @@ private:
 
     class TagMatchEvent : public CgraEvent {
     public:
-        TagMatchEvent (ProcessingElement* _pe, TokenStore::Token _tok)
-            : CgraEvent(), pe(_pe), tok(_tok) {}
-        void go() {
-            pe->tagMatch(tok); 
-        }
-        void printInfo() {
-            printf("TagMatchEvent Source = %d \n", int(pe->getId()));
-        }
-
+        TagMatchEvent (ProcessingElement* _pe, TokenStore::Token _tok);
+        void go() override;
+        void printInfo() override;
     private:
         ProcessingElement* pe;
         TokenStore::Token tok;
@@ -81,24 +58,18 @@ private:
 
     class ExecutionEvent : public CgraEvent {
     public:
-        ExecutionEvent (ProcessingElement* _pe)
-            : CgraEvent(), pe(_pe) {}
-        void go() { pe->executeInstruction(); }
-        void printInfo() {
-            printf("ExecutionEvent Source = %d \n", int(pe->getId()));
-        }
+        ExecutionEvent (ProcessingElement* _pe);
+        void go() override;
+        void printInfo() override;
 
     private:
         ProcessingElement* pe;
     };
     class WritebackEvent : public CgraEvent {
     public:
-        WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
-            : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
-        void go() { pe->writeback(tsEntry, value); }
-        void printInfo() {
-            printf("WritebackEvent Source = %d \n", int(pe->getId()));
-        }
+        WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value);
+        void go() override;
+        void printInfo() override;
 
     private:
         ProcessingElement* pe;

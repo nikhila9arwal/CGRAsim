@@ -1,5 +1,14 @@
 
 #include "cgra_pe.h"
+#include "cgra_instr_mem.cpp"
+#include "cgra_tok_st.cpp"
+
+#define DEBUG_CGRA_PE
+#ifdef DEBUG_CGRA_PE
+#define DBG(...) qlog(__VA_ARGS__)
+#else
+#define DBG(...)
+#endif
 
 /*
  token comes in
@@ -34,8 +43,27 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
+ProcessingElement::ProcessingElement(
+        uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)
+        :   cgra(_cgra),
+            selfIdx(_selfIdx),
+            tagMatchStage(1, _cgra),
+            execStage(1, _cgra),
+            tokenStore(tokenStoreSize),
+            instructionMemory(this, instructionMemSize),
+            execLatency(1),
+            frontEndLatency(1),
+            readyQueueCapacity(100) {}
+
 int ProcessingElement::getId() {return int(selfIdx);}
 
+void ProcessingElement::setStaticParam(Location& loc, Word param) {
+    instructionMemory.setStaticParam(loc, param);
+}
+
+void ProcessingElement::loadBitstream(Config& bitstream, std::string key, void* functionPtr) {
+    instructionMemory.loadBitstream(bitstream, key, functionPtr, cgra);
+}
 
 bool ProcessingElement::tagMatch(TokenStore::Token tok){
     // qassert(!tagMatchStage.isAvailable());
@@ -103,7 +131,7 @@ bool ProcessingElement::isInstructionReady(
 void ProcessingElement::executeInstruction() {
     // auto tsEntry = tokenStore.getTokenStoreEntry(tag);
     // Cycles timeAcquire = execStage.acquire();
-    // qassert(timeAcquire == cgra->now());
+    // qassert(timeAcquire == events::now());
     qassert(!readyQueue.empty());
 
     auto tsEntry = readyQueue.front();
@@ -113,14 +141,20 @@ void ProcessingElement::executeInstruction() {
     auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
-    Word output = instruction->applyFn(lhs, rhs);
 
-    std::cout<<"PE, Inst, Timestamp, Cbid = "<<selfIdx<<", "<<tsEntry->tag.instIdx<<", "<<cgra->now()<<", "<<tsEntry->tag.cbid;
-    std::cout<<"\t Output = "<< output << "\n";
+    auto fn = [&](){ 
+        Word output = instruction->applyFn(lhs, rhs, cgra); 
+        DBG("PE {} Inst {} Timestamp {} Cbid {} Output {}", selfIdx, tsEntry->tag.instIdx, events::now(), tsEntry->tag.cbid, output);
+        writeback(tsEntry, output); 
+    }; 
 
-    writeback(tsEntry, output);
+    if(instruction->opcode ==  "LOAD" || instruction->opcode ==  "STORE"){
+        spawn_event(fn);
+    } else {
+        fn();
+    }
 
-    // Cycles timestamp = cgra->now();
+    // Cycles timestamp = events::now();
     // auto* wbEvent = new WritebackEvent{this, tsEntry, output};
     // cgra->pushEvent(wbEvent, timestamp);
 }
@@ -130,6 +164,34 @@ void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
     cgra->getNetwork()->sendToken(this, inst->destinations, word, tsEntry->tag.cbid);
 }
 
+ProcessingElement::TagMatchEvent::TagMatchEvent (ProcessingElement* _pe, TokenStore::Token _tok)
+    : CgraEvent(), pe(_pe), tok(_tok) {}
+
+void ProcessingElement::TagMatchEvent::go(){
+            pe->tagMatch(tok); 
+        }
+void ProcessingElement::TagMatchEvent::printInfo(){
+    DBG("TagMatchEvent Source = {} \n", int(pe->getId()));
+}
+
+ProcessingElement::ExecutionEvent::ExecutionEvent (ProcessingElement* _pe)
+    : CgraEvent(), pe(_pe) {}
+
+void ProcessingElement::ExecutionEvent::go()  { 
+    pe->executeInstruction(); 
+}
+void ProcessingElement::ExecutionEvent::printInfo()  {
+    DBG("ExecutionEvent Source = {} \n", int(pe->getId()));
+}
+
+ProcessingElement::WritebackEvent::WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
+    : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
+void ProcessingElement::WritebackEvent::go() { 
+    pe->writeback(tsEntry, value); 
+}
+void ProcessingElement::WritebackEvent::printInfo() {
+    DBG("WritebackEvent Source = {} \n", int(pe->getId()));
+}
 
 }
 }

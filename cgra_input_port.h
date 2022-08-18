@@ -15,17 +15,17 @@ class Network;
 class InputPort : public NetworkPort{
 public:
 
-    InputPort(Cgra* _cgra, Network * _network) : cgra(_cgra), network(_network), inputPort(1, _cgra){}
+    InputPort(Cgra* _cgra, Network * _network);
     bool acceptToken(Word value, std::vector<Location>destinations, CbIdx cbid);
-    void acknowledgeToken();
+    void acknowledgeToken() override;
     struct Input{
-        Input(Word _value, std::vector<Location> _destinations, CbIdx _cbid) : value(_value), destinations(_destinations), cbid(_cbid) {}
+        Input(Word _value, std::vector<Location> _destinations, CbIdx _cbid);
         Word value;
         std::vector<Location> destinations;
         CbIdx cbid;
     };
 
-    int getId() {return -1;}
+    int getId() override {return -1;}
 
 private:
     const unsigned runtimeInputsQueueSize = 100;

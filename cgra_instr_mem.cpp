@@ -2,6 +2,7 @@
 
 #include "cgra_instr_mem.h"
 #include "cgra_pe.h"
+#include "cgra_instr.cpp"
 
 namespace platy {
 namespace sim {
@@ -9,6 +10,18 @@ namespace cgra {
 
 InstructionMemory::InstructionMemory(ProcessingElement * _pe, uint32_t size)
     :pe(_pe), instructionMemory{(InstrMemIdx)size} {
+}
+
+void InstructionMemory::setStaticParam(Location& loc, Word param) {
+    instructionMemory[loc.inst].setStaticParam(loc, param);
+}
+
+Instruction* InstructionMemory::getInstruction(InstrMemIdx idx) { 
+    return &instructionMemory[idx]; 
+}
+
+InstrMemIdx InstructionMemory::size() { 
+    return instructionMemory.size(); 
 }
 
 void InstructionMemory::loadBitstream(Config& bitstream, std::string key, void* functionPtr, Cgra *cgra) {

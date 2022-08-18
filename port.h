@@ -9,9 +9,7 @@ class Cgra;
 
 class Port {
 public:
-    Port(int width, Cgra* _cgra) : cgra(_cgra) {
-        for (int i=0; i<width; i++) available.push(0_cycles);
-    }
+    Port(int width, Cgra* _cgra);
     ~Port() {}
 
     /* @brief Return the first time that this Port will be available.

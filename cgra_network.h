@@ -24,10 +24,9 @@ protected:
 
 class BusNetwork : public Network {
 public:
-    BusNetwork(Cgra* _cgra, int _bandwidth) : Network{_cgra},
-        bandwidthPort{_bandwidth, _cgra} {}
+    BusNetwork(Cgra* _cgra, int _bandwidth);
     void sendToken(NetworkPort* src, const std::vector<Location>& dsts, Word word,
-            CbIdx cbidx);
+            CbIdx cbidx) override;
     const Cycles delay = 1_cycles;
     Port bandwidthPort;
 
@@ -35,13 +34,9 @@ private:
     class BusEvent : public CgraEvent {
     public:
         BusEvent(Cgra* _cgra, BusNetwork* _network, NetworkPort* _src,
-                 const std::vector<Location> &_dsts, Word _value, CbIdx _cbidx)
-            : CgraEvent(), cgra(_cgra), network(_network), src(_src),
-              dsts(_dsts.begin(), _dsts.end()), value(_value), cbidx(_cbidx) {}
-        void go();
-        void printInfo() {
-            printf("BusEvent Source = %d \n", src->getId());
-        }
+                 const std::vector<Location> &_dsts, Word _value, CbIdx _cbidx);
+        void go() override;
+        void printInfo() override;
 
     private:
         Cgra* cgra;

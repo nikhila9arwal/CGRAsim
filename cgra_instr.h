@@ -18,14 +18,15 @@ struct Instruction {
     bool isRhsImm;
     Word lhsImm;
     Word rhsImm;
-    Word (*applyFn)(Word lhs, Word rhs);
+    std::string opcode;
+    Word (*applyFn)(Word lhs, Word rhs, Cgra* cgra);
     
     std::vector<Location> destinations;
 
     void loadBitstream(Config& bitstream, std::string key, void* functionPtr, Cgra* cgra);
     void decode(std::string type);
     void setStaticParam(Location& loc, Word param);
-    bool isFullyImmediate() { return !isPredicated && isLhsImm && isRhsImm; }
+    bool isFullyImmediate();
 };
 
 } // namespace cgra

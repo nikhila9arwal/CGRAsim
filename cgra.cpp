@@ -1,7 +1,17 @@
 
 #include "cgra.h"
-#include "cgra_network.h"
-#include "cgra_pe.h"
+#include "cgra_network.cpp"
+#include "cgra_pe.cpp"
+#include "cgra_defs.cpp"
+#include "cgra_input_port.cpp"
+
+
+#define DEBUG_CGRA
+#ifdef DEBUG_CGRA
+#define DBG(...) qlog(__VA_ARGS__)
+#else
+#define DBG(...)
+#endif
 
 
 namespace platy {
@@ -12,7 +22,6 @@ namespace cgra {
 Cgra::Cgra(
     // const std::string& name,
     // TileIdx tile,
-    // EngineIdx _engIdx,
     uint32_t _numPes,
     uint32_t _numInstrsPerPE, 
     uint32_t _numThrds) {   //: Engine(name, tile, _engIdx) {
@@ -24,22 +33,99 @@ Cgra::Cgra(
     }
     network = new BusNetwork(this, 8);
     inputPort = new InputPort(this, network);
-    //Not sure about this
     currentTime = 0_cycles;
 
     std::unordered_set<InstrMemIdx> freeInsts;
     for (InstrMemIdx i=0_instid; i<InstrMemIdx(_numInstrsPerPE); i++) {freeInsts.insert(i);}
     instFreeList.insert(instFreeList.end(), PeIdx(_numPes), std::unordered_set<InstrMemIdx>(freeInsts));
-    // cout<<instFreeList[0_peid].size()<<"\n";
 
 }
 
+void Cgra::setCaches(BaseCache* _l1d){
+    l1d = _l1d;
+}
+
+BaseCache* Cgra::getL1d() { 
+    return l1d; 
+}
+
+
+void Cgra::unconfigure(void* funcPtr) {
+    qassert(funcPtr!=nullptr);
+}
+
 void Cgra::pushEvent(CgraEvent* event, Cycles timestamp){
+    Cycles oldTime = nextEventTime();
     eventQueue.push(std::make_pair(timestamp, event));
+
+    if (nextEventTime() < oldTime) {spawn_event([&](){ 
+        time::ff(nextEventTime());
+        executionLoop(); 
+    });}
 }
 
 Network* Cgra::getNetwork(){
     return network;
+}
+
+// Cycles Cgra::now() const { 
+//     return events::now(); 
+// }
+
+Cycles Cgra::nextEventTime() const{
+    if (eventQueue.empty()){
+        return std::numeric_limits<Cycles>::max();
+    } 
+    return eventQueue.top().first;
+}
+
+ProcessingElement* Cgra::getProcessingElement(PeIdx peid) {
+    return processingElements.at(peid);
+}
+
+const ProcessingElement* Cgra::getProcessingElement(PeIdx peid) const {
+    return const_cast<Cgra*>(this)->getProcessingElement(peid);     
+}
+
+StrongVec<PeIdx, std::unordered_set<InstrMemIdx>>& Cgra::getInstFreeList() { 
+    return instFreeList;
+}
+
+PhysicalInstAddr Cgra::translateVirtualInstAddr (VirtualInstAddr vAddr) { 
+    return vTable[vAddr] ;
+}
+
+
+Word Cgra::dload(Word readAddr) {  
+
+    auto dummyState = MESIState::I;
+    uint32_t flags = 0;
+
+    MemReq req = {
+        LineAddr{ (ByteAddr) readAddr, 1_pid }, AccessType::GETS, 0_childIdx, MESIState::I, &dummyState,
+        nullptr, LineIdx::INVALID, ByteAddr(-1ul), flags,
+    };
+
+    l1d->access(req);
+
+    Word readVal;
+    readFromApp<Word>(1_pid, (void*)readAddr, readVal);
+
+    return readVal;  
+}
+
+void Cgra::store(Word writeAddr, Word val) {
+
+    auto dummyState = MESIState::I;
+    uint32_t flags = 0;
+
+    MemReq req = {
+        LineAddr{ ByteAddr(writeAddr), 1_pid }, AccessType::GETX, 0_childIdx, MESIState::I, &dummyState,
+        nullptr, LineIdx::INVALID, ByteAddr(-1ul), flags,
+    };
+    l1d->access(req);
+
+    writeToApp<Word>(1_pid, (void*)writeAddr, val);
 }
 
 void Cgra::instAllocator(Config& bitstream, void* functionPtr){
@@ -60,34 +146,16 @@ void Cgra::instAllocator(Config& bitstream, void* functionPtr){
 }
 
 
-// TODO (nikhil): Change wunderpus decompression cfg to have params
-void Cgra::configure(const FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
-    // Config conf(functionConf.filename.c_str());
+void Cgra::configure(const platy::sim::ms::Engine::FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
     Config conf(functionConf.filename.c_str());
-    //cbid = scheduler(conf);
-    //
     instAllocator(conf, functionConf.functionPtr);
     loadBitstream(conf, functionConf.functionPtr);
-    // loadStaticParams(conf, functionConf.context);
     loadStaticParams(conf, functionConf.context, functionConf.functionPtr);
     loadInputMap(conf, functionConf.functionPtr);
 }
 
-void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req) {
-    // TODO (nikhil): check size of inputs
+void Cgra::execute(std::shared_ptr<platy::sim::ms::TaskReq> req){//std::shared_ptr<TaskReq> req) {
 
-    // TODO (nikhil) :  Move to new function
-    // TODO (nikhil): should be done in the operand class or somewhere else Idk.
-
-    // initial check for what's ready because of immediates
-    // for (PeIdx p = 0_peid; p < processingElements.size(); p++) {
-    //     processingElements[p]->pushFullyImmediateInstructions(cbidx);
-    // }
-
-    // Word* runtimeInputs = (Word*)req->args;
-    // if (inputsPendingAck>0){
-    //     std::cout<<"Execution failed. Inputs pending from previous run. Try again.";
-    // }
     Word* runtimeInputs = (Word*)req->args;
     cbTable[cbidx] = req->task;
 
@@ -96,22 +164,32 @@ void Cgra::execute(std::shared_ptr<TaskReq> req){//std::shared_ptr<TaskReq> req)
     cbidx = cbidx + 1_cbid;
 }
 
+//nikhil (todo): what if you have 2 threads that arrive here at the same time.
+
+void Cgra::executionLoop(){
+//nikhil: not clear whats going on here
+    while(nextEventTime() == events::now()){
+        tick(); // catch if infinity
+        time::ff(nextEventTime()); //yield to simulator till cgra-> now()
+    }
+    qassert(nextEventTime() > events::now());
+}
+
 void Cgra::tick() {
     if (eventQueue.empty()) {
         throw OutOfEvents{};
     }
 
-    // execute until the next time step
-    // pq elements are pair<Cycles, Event*>
-    printf("\n\n------------------------------Cycle%d------------------------------\n\n",int(now()));
+    currentTime = eventQueue.top().first; // corresponds to time on top of queue.
+
+    DBG("\n\n------------------------------Cycle{}------------------------------\n\n", uint64_t(events::now()));
+    
     while (!eventQueue.empty() && eventQueue.top().first <= currentTime) {
         CgraEvent* event = eventQueue.top().second;
         eventQueue.pop();
         event->printInfo();
         event->go();
     }
-    // move time forward to the next event
-    currentTime = eventQueue.top().first; // corresponds to time on top of queue.
 }
 
 void Cgra::loadBitstream(Config& bitstream, void* functionPtr) {
@@ -125,9 +203,6 @@ void Cgra::loadBitstream(Config& bitstream, void* functionPtr) {
     }
 }
 
-// 1.) Extract params offsets and
-// 2.) Fetch params from context+offset
-// 3.) Place them as as directed config destinations
 void Cgra::loadStaticParams(Config& bitstream, void* context, void* functionPtr ) {
     for (int i = 0;; i++) {
         std::string paramKey = qformat("param_{}", i);
@@ -173,7 +248,6 @@ void Cgra::loadInputMap(Config& bitstream, void* functionPtr) {
     inputDestinationMap[functionPtr] = confInputDestinationMap;
 }
 
-// TODO (nikhil): change name to launch new thread return thread id
 void Cgra::loadRuntimeInputs(Word* inputs) {
     for (auto destinations : inputDestinationMap[cbTable[cbidx]]) {
 

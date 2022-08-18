@@ -15,8 +15,8 @@ public:
 
     virtual void go() = 0;
     virtual void printInfo() = 0;
-};
 
+};
 struct Cmprtr {
     bool operator()(const std::pair<Cycles, CgraEvent *> lhs,
                   const std::pair<Cycles, CgraEvent *> rhs) const {
