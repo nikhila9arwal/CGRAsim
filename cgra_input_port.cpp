@@ -1,16 +1,13 @@
 
-#include "cgra_defs.h"
-#include "cgra_network.h"
-#include "cgra.h"
 #include "cgra_input_port.h"
-#include "port.cpp"
+#include "cgra_network.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-InputPort::InputPort(Cgra* _cgra, Network * _network) 
-: cgra(_cgra), network(_network), inputPort(1, _cgra){}
+InputPort::InputPort(Network * _network) 
+:network(_network), inputPort(1){}
 
 InputPort::Input::Input(Word _value, std::vector<Location> _destinations, CbIdx _cbid) 
 : value(_value), destinations(_destinations), cbid(_cbid) {}

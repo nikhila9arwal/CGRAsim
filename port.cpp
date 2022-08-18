@@ -1,11 +1,10 @@
 #include "port.h"
-#include "cgra.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-Port::Port(int width, Cgra* _cgra) : cgra(_cgra) {
+Port::Port(int width){
     for (int i=0; i<width; i++) available.push(0_cycles);
 }
 

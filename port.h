@@ -5,11 +5,11 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
-class Cgra;
+// class Cgra;
 
 class Port {
 public:
-    Port(int width, Cgra* _cgra);
+    Port(int width);
     ~Port() {}
 
     /* @brief Return the first time that this Port will be available.
@@ -26,7 +26,7 @@ public:
 
 private:
     std::priority_queue<Cycles, std::vector<Cycles>, std::greater<Cycles>> available;
-    Cgra* cgra;
+    // Cgra* cgra;
 };
 
 }

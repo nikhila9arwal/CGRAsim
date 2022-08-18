@@ -1,5 +1,4 @@
 #include "cgra_instr.h"
-#include "cgra.h"
 
 namespace platy {
 namespace sim {

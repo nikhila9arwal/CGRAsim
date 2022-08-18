@@ -5,15 +5,15 @@
 #include "cgra_instr_mem.h"
 #include "cgra_tok_st.h"
 #include "cgra_event.h"
-#include "cgra.h"
 #include "port.h"
-#include "cgra_network.h"
 #include "cgra_network_port.h"
 
 
 namespace platy {
 namespace sim {
 namespace cgra {
+
+class Cgra;
 
 class ProcessingElement : public NetworkPort {
 public:

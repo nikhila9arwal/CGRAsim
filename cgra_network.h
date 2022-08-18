@@ -3,11 +3,14 @@
 
 #include "port.h"
 #include "cgra_defs.h"
-#include "cgra.h"
+#include "cgra_event.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
+
+class Cgra;
+class NetworkPort;
 
 class Network {
 public:

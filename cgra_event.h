@@ -2,13 +2,13 @@
 #pragma once
 
 #include "cgra_defs.h"
-#include "cgra_tok_st.h"
+// #include "cgra_tok_st.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-class Cgra;
+// class Cgra;
 class CgraEvent {
 public:
     CgraEvent() {}

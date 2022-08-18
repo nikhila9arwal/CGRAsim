@@ -27,7 +27,7 @@ void BusNetwork::sendToken(PeIdx peid, TokenStore::Token tok) {
 #endif
 
 BusNetwork::BusNetwork(Cgra* _cgra, int _bandwidth) 
-: Network{_cgra}, bandwidthPort{_bandwidth, _cgra} {}
+: Network{_cgra}, bandwidthPort{_bandwidth} {}
 
 void BusNetwork::sendToken(NetworkPort* src, const std::vector<Location>& dsts, Word value, CbIdx cbidx) {
     Cycles timestamp = bandwidthPort.grab(delay);

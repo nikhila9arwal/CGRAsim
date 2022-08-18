@@ -2,12 +2,13 @@
 #pragma once
 
 #include "cgra_defs.h"
+#include "cgra.h"
 
 namespace platy {
 namespace sim {
 namespace cgra {
 
-class Cgra;
+// class Cgra;
 
 struct Instruction {
     Instruction();

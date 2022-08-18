@@ -5,17 +5,18 @@
 #include "port.h"
 
 
+
 namespace platy {
 namespace sim {
 namespace cgra {
 
-class Cgra;
+// class Cgra;
 class Network;
 
 class InputPort : public NetworkPort{
 public:
 
-    InputPort(Cgra* _cgra, Network * _network);
+    InputPort(Network * _network);
     bool acceptToken(Word value, std::vector<Location>destinations, CbIdx cbid);
     void acknowledgeToken() override;
     struct Input{
@@ -30,7 +31,7 @@ public:
 private:
     const unsigned runtimeInputsQueueSize = 100;
     std::deque<Input> runtimeInputsQueue;
-    Cgra * cgra;
+    // Cgra * cgra;
     Network * network;
     Port inputPort;
 };

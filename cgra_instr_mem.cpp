@@ -2,7 +2,8 @@
 
 #include "cgra_instr_mem.h"
 #include "cgra_pe.h"
-#include "cgra_instr.cpp"
+#include "cgra.h"
+
 
 namespace platy {
 namespace sim {

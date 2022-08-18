@@ -9,9 +9,9 @@
 #include <stdint.h>
 // #include "engine_cgra.h"
 // #include "defs.h"
-#include "../../scheduler_ms.h"
-#include "../../rw_app.h"
-#include "../../event_lambda.h"
+#include "../scheduler_ms.h"
+#include "../rw_app.h"
+#include "../event_lambda.h"
 
 #include "strong_int.h"
 #include "strong_vec.h"

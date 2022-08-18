@@ -1,7 +1,7 @@
 
 #include "cgra_pe.h"
-#include "cgra_instr_mem.cpp"
-#include "cgra_tok_st.cpp"
+#include "cgra.h"
+#include "cgra_network.h"
 
 #define DEBUG_CGRA_PE
 #ifdef DEBUG_CGRA_PE
@@ -47,8 +47,8 @@ ProcessingElement::ProcessingElement(
         uint32_t tokenStoreSize, uint32_t instructionMemSize, PeIdx _selfIdx, Cgra* _cgra)
         :   cgra(_cgra),
             selfIdx(_selfIdx),
-            tagMatchStage(1, _cgra),
-            execStage(1, _cgra),
+            tagMatchStage(1),
+            execStage(1),
             tokenStore(tokenStoreSize),
             instructionMemory(this, instructionMemSize),
             execLatency(1),

@@ -1,9 +1,8 @@
 
 #include "cgra.h"
-#include "cgra_network.cpp"
-#include "cgra_pe.cpp"
-#include "cgra_defs.cpp"
-#include "cgra_input_port.cpp"
+#include "cgra_network.h"
+#include "cgra_pe.h"
+#include "cgra_input_port.h"
 
 
 #define DEBUG_CGRA
@@ -32,7 +31,7 @@ Cgra::Cgra(
             new ProcessingElement{_numInstrsPerPE* _numThrds, _numInstrsPerPE, p, this});
     }
     network = new BusNetwork(this, 8);
-    inputPort = new InputPort(this, network);
+    inputPort = new InputPort(network);
     currentTime = 0_cycles;
 
     std::unordered_set<InstrMemIdx> freeInsts;

@@ -2,9 +2,7 @@
 #pragma once
 
 #include "cgra_defs.h"
-#include "cgra_tok_st.h"
 #include "cgra_event.h"
-#include "cgra_input_port.h"
 
 namespace platy {
 namespace sim {
@@ -12,6 +10,8 @@ namespace cgra {
 
 class Network;
 class ProcessingElement;
+class InputPort;
+
 /**
  * @brief A single CGRA fabric. @brief
  */
