@@ -35,7 +35,7 @@ Cgra::Cgra(
     currentTime = 0_cycles;
 
     std::unordered_set<InstrMemIdx> freeInsts;
-    for (InstrMemIdx i=0_instid; i<InstrMemIdx(_numInstrsPerPE); i++) {freeInsts.insert(i);}
+    for (InstrMemIdx i=InstrMemIdx(_numInstrsPerPE) - 1_instid; i>=0_instid; i-=1_instid) {freeInsts.insert(i);}
     instFreeList.insert(instFreeList.end(), PeIdx(_numPes), std::unordered_set<InstrMemIdx>(freeInsts));
 
 }
