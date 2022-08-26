@@ -26,7 +26,7 @@ public:
     bool isInstructionReady(
         TokenStore::EntryPtr tsEntry, Instruction* inst);
     void executeInstruction();
-    void writeback(TokenStore::EntryPtr tsEntry, Word word);
+    void writeback(TokenStore::Tag tag, Word word);
     void setStaticParam(Location& loc, Word param);
     void loadBitstream(Config& bitstream, std::string key, void* functionPtr);
     bool tagMatch(TokenStore::Token tok);
@@ -67,13 +67,13 @@ private:
     };
     class WritebackEvent : public CgraEvent {
     public:
-        WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value);
+        WritebackEvent(ProcessingElement* _pe, TokenStore::Tag _tag, Word _value);
         void go() override;
         void printInfo() override;
 
     private:
         ProcessingElement* pe;
-        TokenStore::EntryPtr tsEntry;
+        TokenStore::Tag tag;
         Word value;
     };
 };

@@ -134,20 +134,23 @@ void ProcessingElement::executeInstruction() {
     // qassert(timeAcquire == events::now());
     qassert(!readyQueue.empty());
 
-    auto tsEntry = readyQueue.front();
+
+    TokenStore::EntryPtr tsEntry = readyQueue.front();
+    TokenStore::Tag tag = tsEntry->tag;
     readyQueue.pop_front();
-
-
-    auto instruction = instructionMemory.getInstruction(tsEntry->tag.instIdx);
+    Instruction * instruction = instructionMemory.getInstruction(tag.instIdx);
     Word lhs = instruction->isLhsImm ? instruction->lhsImm : tsEntry->lhs;
     Word rhs = instruction->isRhsImm ? instruction->rhsImm : tsEntry->rhs;
 
-    auto fn = [&](){ 
-        Word output = instruction->applyFn(lhs, rhs, cgra); 
-        DBG("PE {} Inst {} Timestamp {} Cbid {} Output {}", selfIdx, tsEntry->tag.instIdx, events::now(), tsEntry->tag.cbid, output);
-        writeback(tsEntry, output); 
-    }; 
+        
 
+    auto fn = [instruction, lhs, rhs, tag, this](){
+        Word output = instruction->applyFn(lhs, rhs, tag.cbid, cgra); 
+        DBG("PE {} Inst {} Timestamp {} Cbid {} Output {} lhs {} rhs {} ", selfIdx, tag.instIdx, 
+            events::now(), tag.cbid, output, lhs, rhs);
+        writeback(tag, output); 
+    }; 
+    //TODO (nikhil): make opcode an enum.
     if(instruction->opcode ==  "LOAD" || instruction->opcode ==  "STORE"){
         spawn_event(fn);
     } else {
@@ -159,9 +162,9 @@ void ProcessingElement::executeInstruction() {
     // cgra->pushEvent(wbEvent, timestamp);
 }
 
-void ProcessingElement::writeback(TokenStore::EntryPtr tsEntry, Word word) {
-    auto inst = instructionMemory.getInstruction(tsEntry->tag.instIdx);
-    cgra->getNetwork()->sendToken(this, inst->destinations, word, tsEntry->tag.cbid);
+void ProcessingElement::writeback(TokenStore::Tag tag, Word word) {
+    auto inst = instructionMemory.getInstruction(tag.instIdx);
+    cgra->getNetwork()->sendToken(this, inst->destinations, word, tag.cbid);
 }
 
 ProcessingElement::TagMatchEvent::TagMatchEvent (ProcessingElement* _pe, TokenStore::Token _tok)
@@ -184,10 +187,10 @@ void ProcessingElement::ExecutionEvent::printInfo()  {
     DBG("ExecutionEvent Source = {} \n", int(pe->getId()));
 }
 
-ProcessingElement::WritebackEvent::WritebackEvent(ProcessingElement* _pe, TokenStore::EntryPtr _tsEntry, Word _value)
-    : CgraEvent(), pe(_pe), tsEntry(_tsEntry), value(_value) {}
+ProcessingElement::WritebackEvent::WritebackEvent(ProcessingElement* _pe, TokenStore::Tag _tag, Word _value)
+    : CgraEvent(), pe(_pe), tag(_tag), value(_value) {}
 void ProcessingElement::WritebackEvent::go() { 
-    pe->writeback(tsEntry, value); 
+    pe->writeback(tag, value); 
 }
 void ProcessingElement::WritebackEvent::printInfo() {
     DBG("WritebackEvent Source = {} \n", int(pe->getId()));

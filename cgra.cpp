@@ -54,11 +54,17 @@ void Cgra::unconfigure(void* funcPtr) {
 }
 
 void Cgra::pushEvent(CgraEvent* event, Cycles timestamp){
+    
+    qassert(timestamp >= events::now());
     Cycles oldTime = nextEventTime();
     eventQueue.push(std::make_pair(timestamp, event));
 
-    if (nextEventTime() < oldTime) {spawn_event([&](){ 
-        time::ff(nextEventTime());
+    DBG("event {}, oldEvent{}, now{}", timestamp, oldTime, events::now());
+
+    if (timestamp < oldTime) {spawn_event([timestamp, this](){ 
+        
+        time::ff(timestamp);
+        
         executionLoop(); 
     });}
 }
@@ -73,7 +79,8 @@ Network* Cgra::getNetwork(){
 
 Cycles Cgra::nextEventTime() const{
     if (eventQueue.empty()){
-        return std::numeric_limits<Cycles>::max();
+        
+        return (Cycles)std::numeric_limits<uint64_t>::max();
     } 
     return eventQueue.top().first;
 }
@@ -135,7 +142,9 @@ void Cgra::instAllocator(Config& bitstream, void* functionPtr){
         qassert(i<processingElements.size());
         for (InstrMemIdx j = 0_instid;; j++) {
             std::string instKey = peKey + qformat(".inst_{}", j);
+            DBG("Pe {} Inst {} exists {} \n",i,j, bitstream.exists(instKey));
             if(!bitstream.exists(instKey)) { break; }
+            DBG("Cbid = {} instFreeList[i = {}].empty() = {}\n", cbidx, i, instFreeList[i].empty());
             qassert(!instFreeList[i].empty());
             auto firstFreeInst = instFreeList[i].begin();
             vTable[VirtualInstAddr{functionPtr, i, j}] = PhysicalInstAddr{i, *firstFreeInst};
@@ -146,6 +155,7 @@ void Cgra::instAllocator(Config& bitstream, void* functionPtr){
 
 
 void Cgra::configure(const platy::sim::ms::Engine::FunctionConfiguration& functionConf){//const Engine::FunctionConfiguration& functionConf){
+    DBG("Configuring {}", functionConf.functionPtr);
     Config conf(functionConf.filename.c_str());
     instAllocator(conf, functionConf.functionPtr);
     loadBitstream(conf, functionConf.functionPtr);
@@ -162,33 +172,59 @@ void Cgra::endCallback(CbIdx cbid){
 
 void Cgra::execute(std::shared_ptr<platy::sim::ms::TaskReq> req){//std::shared_ptr<TaskReq> req) {
 
-    Word* runtimeInputs = (Word*)req->args;
-    cbTable[cbidx] = req->task;
+    DBG("Starting executing functionPtr {}", req->task);
+    Word runtimeInputs = (*(Word*)req->args);
 
-    loadRuntimeInputs(runtimeInputs);
+    uint32_t flags = 0;
+    if(ms::tako::takoSystem){
+        flags = getCallbackFlags(((platy::sim::ms::tako::CallbackReq*) req.get()) -> callbackType);
+    }
 
-    cbidx = cbidx + 1_cbid;
+    uint32_t numWordsInLine  = LINE_SIZE/sizeof(Word);
+
+    for (unsigned i=0 ; i<numWordsInLine ; i++){
+        DBG("Starting Callback {}", cbidx);
+        cbTable.push_back(new Callback(req->task, 1_pid, flags));
+        loadRuntimeInputs(&runtimeInputs);
+        runtimeInputs+=sizeof(Word);
+        cbidx = cbidx + 1_cbid;
+        DBG("cbTAble size {}", cbTable.size());
+    }
+    
+    CbIdx lowerBound = cbidx - (CbIdx)numWordsInLine;
+    CbIdx upperBound = cbidx;
+    for (CbIdx i = lowerBound ; i < upperBound ; i = i + 1_cbid){
+        DBG("waiting on {}", i);
+        cbTable[i]->wait();
+        DBG("Done waiting on {}", i);
+    }
+    
+
 }
 
 //nikhil (todo): what if you have 2 threads that arrive here at the same time.
 
 void Cgra::executionLoop(){
-//nikhil: not clear whats going on here
+    
     while(nextEventTime() == events::now()){
-        tick(); // catch if infinity
-        time::ff(nextEventTime()); //yield to simulator till cgra-> now()
+        tick();
+        if(nextEventTime() != (Cycles)std::numeric_limits<uint64_t>::max()) {
+            time::ff(nextEventTime());
+        }
     }
     qassert(nextEventTime() > events::now());
 }
 
 void Cgra::tick() {
-    if (eventQueue.empty()) {
-        throw OutOfEvents{};
-    }
+    qassert(!eventQueue.empty());
+    // if (eventQueue.empty()) {
+    //     
+    //     throw OutOfEvents{};
+    // }
 
     currentTime = eventQueue.top().first; // corresponds to time on top of queue.
 
-    DBG("\n\n------------------------------Cycle{}------------------------------\n\n", uint64_t(events::now()));
+    DBG("\n\n------------------------------Cycle{}------------------------------\n\n", events::now());
     
     while (!eventQueue.empty() && eventQueue.top().first <= currentTime) {
         CgraEvent* event = eventQueue.top().second;
@@ -216,7 +252,8 @@ void Cgra::loadStaticParams(Config& bitstream, void* context, void* functionPtr 
             break;
         }
         int paramOffset = bitstream.get<int32_t>(paramKey + ".offset");
-        Word param = *(Word*)((uint8_t*)context + paramOffset);
+        Word param;
+        readFromApp<Word>(1_pid, (void*)((uint8_t*)context + paramOffset), param);
         for (int j = 0;; j++) {
             std::string paramDestKey = paramKey + qformat(".dest_{}", j);
             if(!bitstream.exists(paramDestKey)) break;
