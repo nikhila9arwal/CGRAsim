@@ -61,6 +61,8 @@ public:
     void executionLoop();
     // ConfIdx getConfidx() {return confidx;}
 
+    void endCallback(CbIdx cbid);
+
 private:
     Cycles currentTime;
     // BaseCache* l1i;

@@ -153,6 +153,13 @@ void Cgra::configure(const platy::sim::ms::Engine::FunctionConfiguration& functi
     loadInputMap(conf, functionConf.functionPtr);
 }
 
+
+void Cgra::endCallback(CbIdx cbid){
+    DBG("Ending Callback {}", cbid);
+    // qassert(callbackCvs[cbid].size() == 1);
+    cbTable[cbid]->end();
+}
+
 void Cgra::execute(std::shared_ptr<platy::sim::ms::TaskReq> req){//std::shared_ptr<TaskReq> req) {
 
     Word* runtimeInputs = (Word*)req->args;

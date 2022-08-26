@@ -149,6 +149,14 @@ void Instruction::decode(std::string type) {
             // return rhs;
         // };
     }
+    else if (type == "END"){
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) {
+            (void) lhs;
+            (void) rhs;
+            cgra->endCallback(cbid);
+            return (Word)1;
+        };
+    }
 
     // else if ( type == "SELECT"){
     //     applyFn = [](Word lhs, Word rhs){if (lhs) return rhs; else return -1;};
