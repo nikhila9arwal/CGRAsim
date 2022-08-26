@@ -9,9 +9,11 @@
 #include <stdint.h>
 // #include "engine_cgra.h"
 // #include "defs.h"
-#include "../scheduler_ms.h"
+// #include "../scheduler_ms.h"
+#include "../scheduler_tako.h"
 #include "../rw_app.h"
 #include "../event_lambda.h"
+// #include "../event_parallel.h"
 
 #include "strong_int.h"
 #include "strong_vec.h"
@@ -96,6 +98,9 @@ struct Location {
     Location(Config& bitstream, std::string key);
     inline void loadBitstream(Config& bitstream, std::string key);
 };
+
+uint32_t getCallbackFlags(ms::tako::CallbackType callbackType);
+
 }  // namespace cgra
 }  // namespace sim
 }  // namespace platy

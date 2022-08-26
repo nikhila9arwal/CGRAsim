@@ -20,7 +20,7 @@ struct Instruction {
     Word lhsImm;
     Word rhsImm;
     std::string opcode;
-    Word (*applyFn)(Word lhs, Word rhs, Cgra* cgra);
+    Word (*applyFn)(Word lhs, Word rhs, CbIdx cbid, Cgra* cgra);
     
     std::vector<Location> destinations;
 

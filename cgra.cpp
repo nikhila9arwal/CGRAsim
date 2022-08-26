@@ -101,37 +101,42 @@ PhysicalInstAddr Cgra::translateVirtualInstAddr (VirtualInstAddr vAddr) {
     return vTable[vAddr] ;
 }
 
-
-Word Cgra::dload(Word readAddr) {  
+Word Cgra::dload(Word readAddr, CbIdx cbid) {  
+    
 
     auto dummyState = MESIState::I;
-    uint32_t flags = 0;
+    Callback * cb = cbTable[cbid];
 
     MemReq req = {
-        LineAddr{ (ByteAddr) readAddr, 1_pid }, AccessType::GETS, 0_childIdx, MESIState::I, &dummyState,
-        nullptr, LineIdx::INVALID, ByteAddr(-1ul), flags,
+        LineAddr{ (ByteAddr) readAddr, cb->getPid() }, AccessType::GETS, 0_childIdx, MESIState::I, &dummyState,
+        nullptr, LineIdx::INVALID, ByteAddr(-1ul), cb->getFlags(),
     };
 
     l1d->access(req);
 
     Word readVal;
-    readFromApp<Word>(1_pid, (void*)readAddr, readVal);
+    
+    readFromApp<Word>(cbTable[cbid]->getPid(), (void*)readAddr, readVal);
+    
 
     return readVal;  
 }
 
-void Cgra::store(Word writeAddr, Word val) {
+void Cgra::store(Word writeAddr, Word val, CbIdx cbid) {
+    
 
     auto dummyState = MESIState::I;
-    uint32_t flags = 0;
+    Callback * cb = cbTable[cbid];
 
     MemReq req = {
-        LineAddr{ ByteAddr(writeAddr), 1_pid }, AccessType::GETX, 0_childIdx, MESIState::I, &dummyState,
-        nullptr, LineIdx::INVALID, ByteAddr(-1ul), flags,
+        LineAddr{ ByteAddr(writeAddr), cb->getPid() }, AccessType::GETX, 0_childIdx, MESIState::I, &dummyState,
+        nullptr, LineIdx::INVALID, ByteAddr(-1ul), cb->getFlags(),
     };
     l1d->access(req);
+    
+    writeToApp<Word>(cbTable[cbid]->getPid(), (void*)writeAddr, val);
+    
 
-    writeToApp<Word>(1_pid, (void*)writeAddr, val);
 }
 
 void Cgra::instAllocator(Config& bitstream, void* functionPtr){
@@ -292,7 +297,7 @@ void Cgra::loadInputMap(Config& bitstream, void* functionPtr) {
 }
 
 void Cgra::loadRuntimeInputs(Word* inputs) {
-    for (auto destinations : inputDestinationMap[cbTable[cbidx]]) {
+    for (auto destinations : inputDestinationMap[cbTable[cbidx]->getTask()]) {
 
         inputPort->acceptToken(*inputs, destinations, cbidx);
         inputs++;

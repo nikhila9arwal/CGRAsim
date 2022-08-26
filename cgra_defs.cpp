@@ -5,6 +5,25 @@ namespace platy {
 namespace sim {
 namespace cgra {
 
+uint32_t getCallbackFlags(ms::tako::CallbackType callbackType){
+    switch (callbackType) {
+        case ms::tako::CallbackType::ON_MISS:
+            return MemReq::REQUESTED_BY_ON_MISS | MemReq::FROM_LOCAL_ENGINE;
+        case ms::tako::CallbackType::ON_WRITEBACK:
+            return MemReq::REQUESTED_BY_ON_WRITEBACK | MemReq::FROM_LOCAL_ENGINE;
+        case ms::tako::CallbackType::ON_CLEAN_EVICTION:
+            return MemReq::REQUESTED_BY_ON_CLEAN_EVICTION | MemReq::FROM_LOCAL_ENGINE;
+        case ms::tako::CallbackType::ON_SHRINK:
+            return MemReq::REQUESTED_BY_ON_SHRINK | MemReq::FROM_LOCAL_ENGINE;
+        case ms::tako::CallbackType::NONE:
+            // CallbackType::NONE means that the task is not a callback (e.g.,
+            // core-triggered task).
+            return MemReq::FROM_LOCAL_ENGINE;
+        default:
+            panic("Invalid CallbackType: {}.", callbackType);
+    }
+}
+
 Location::Location(PeIdx _pe, InstrMemIdx _inst, PosIdx _pos)
     : pe(_pe), inst(_inst), pos(_pos) {}
 

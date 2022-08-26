@@ -55,39 +55,39 @@ void Instruction::loadBitstream(Config& bitstream, std::string key, void* functi
 
 void Instruction::decode(std::string type) {
     if (type == "NOP") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs + rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs + rhs; };
     } else if (type == "NOT") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return ~(lhs + rhs); };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return ~(lhs + rhs); };
     } else if (type == "AND") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs & rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs & rhs; };
     } else if (type == "OR") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs | rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs | rhs; };
     } else if (type == "XOR") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs ^ rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs ^ rhs; };
     } else if (type == "LSHIFT") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs << rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs << rhs; };
     } else if (type == "RSHIFT") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs >> rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs >> rhs; };
     } else if (type == "ADD") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs + rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs + rhs; };
     } else if (type == "SUB") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs - rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs - rhs; };
     } else if (type == "MUL") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs * rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs * rhs; };
     } else if (type == "DIV") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs / rhs; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs / rhs; };
     } else if (type == "LESSTHAN") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs < rhs ? (Word)1 : (Word)0; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs < rhs ? (Word)1 : (Word)0; };
     } else if (type == "GREATERTHAN") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs > rhs ? (Word)1 : (Word)0; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs > rhs ? (Word)1 : (Word)0; };
     } else if (type == "EQUALTO") {
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) { (void)cgra; return lhs == rhs ? (Word)1 : (Word)0; };
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) { (void)cgra; (void)cbid; return lhs == rhs ? (Word)1 : (Word)0; };
     } else if (type == "LOAD") {  // TODO (nikhil): load using simulator method --
                                   // readFromApp(ProcIdx proc, const void* appPtr,
                                   // T& val) in rw_app.h. proc = 1
         // TODO (nikhil): Do a cache request. Look at simple core.
         // Stall till reply. Reply gives permission to do readFromApp.
-        applyFn = [](Word lhs, Word rhs, Cgra* cgra ) {
+        applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) {
             // return  * ((Word*)lhs+ rhs);
             /*  dload 
                 readFromApp
@@ -97,8 +97,8 @@ void Instruction::decode(std::string type) {
                     spawn new thread
                     cut and paste simple core
             */
-
-           return cgra->dload(lhs+rhs);
+            (void)cbid;
+           return cgra->dload(lhs+rhs, cbid);
 
             //What's a capture?
             // // spawn_event([lhs,rhs](){
@@ -128,8 +128,9 @@ void Instruction::decode(std::string type) {
         // TODO (nikhil): Do an exclusive cache request. Look at simple core.
         // Stall till reply. Reply gives permission to do writeToApp.
             // spawn_event([lhs,rhs](){
-            applyFn = [](Word lhs, Word rhs, Cgra* cgra ) {
-                cgra->store(lhs, rhs);
+            applyFn = [](Word lhs, Word rhs, CbIdx cbid, Cgra* cgra ) {
+                (void)cbid;
+                cgra->store(lhs, rhs, cbid);
                 return (Word)1;
             };
             

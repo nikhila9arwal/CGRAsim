@@ -42,9 +42,9 @@ public:
     void tick();
 
     // Cycles now() const;
-    Word dload(Word readAddr);
+    Word dload(Word readAddr, CbIdx cbid);
 
-    void store(Word writeAddr, Word val);
+    void store(Word writeAddr, Word val, CbIdx cbid);
 
     Cycles nextEventTime () const;
 
@@ -64,13 +64,44 @@ public:
     void endCallback(CbIdx cbid);
 
 private:
+        
+    class Callback{
+    public:
+        Callback(void * _task, ProcIdx _pid, uint32_t _flags) : task(_task), pid(_pid), flags(_flags) {}
+        void wait() {
+            if (!ended) {
+                cv.wait();
+            }
+            qassert(ended);
+        }
+        void end() {
+            ended = true;
+            qassert(cv.size()<=1);
+            cv.notifyAll();
+        }
+        void * getTask() {
+            return task;
+        }
+        ProcIdx getPid(){
+            return pid;
+        }
+        uint32_t getFlags(){
+            return flags;
+        }
+    private:
+        void* task;
+        ProcIdx pid;
+        uint32_t flags;
+        events::ConditionVariable cv;
+        bool ended = false;
+    };
     Cycles currentTime;
     // BaseCache* l1i;
     BaseCache* l1d;
     std::priority_queue<std::pair<Cycles, CgraEvent*>, 
         std::vector<std::pair<Cycles, CgraEvent*>>, Cmprtr> eventQueue;
     std::unordered_map<VirtualInstAddr, PhysicalInstAddr, VirtualInstAddr::HashFn> vTable;
-    std::unordered_map<CbIdx, void*> cbTable;
+    StrongVec<CbIdx, Callback*> cbTable;
     CbIdx cbidx;
     // ConfIdx confidx;
     Network* network;
